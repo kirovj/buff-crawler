@@ -56,9 +56,21 @@ pub struct Item {
     stat_trak: bool,
 }
 
+#[derive(Debug)]
 pub struct PriceInfo {
     id: usize,
     item_id: u32,
     date: String,
     price: f32,
+}
+
+impl PriceInfo {
+    pub fn new(id: usize, item_id: u32, date: String, price: f32) -> Self {
+        PriceInfo {
+            id,
+            item_id,
+            date,
+            price,
+        }
+    }
 }
