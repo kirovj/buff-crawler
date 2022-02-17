@@ -27,6 +27,7 @@ dependencies = [
  "futures",
  "lazy_static",
  "reqwest",
+ "serde_json",
  "tokio",
 ]
 
