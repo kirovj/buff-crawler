@@ -48,7 +48,7 @@ fn build_price_info(value: &Value) -> Result<PriceInfo, Box<dyn Error>> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let urls = vec![
-        "https://buff.163.com/api/market/goods?game=csgo&page_num=1&category=weapon_knife_survival_bowie&use_suggestion=0&trigger=undefined_trigger".to_string(),
+        "https://buff.163.com/api/market/goods?game=csgo&page_num=1&category=weapon_knife_survival_bowie&use_suggestion=0&trigger=undefined_trigger",
     ];
 
     let results = join_all(urls.into_iter().map(|url| http::request(url))).await;
