@@ -1,5 +1,5 @@
 // 类别
-enum Type {
+enum Typo {
     Kinfe,
     Pistol,
     Rifle,
@@ -47,7 +47,7 @@ enum Rarity {
 
 pub struct Item {
     id: u32,
-    typo: Type,
+    typo: Typo,
     catagory: String,
     name: String,
     ware_type: WearType,
