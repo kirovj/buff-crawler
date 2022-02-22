@@ -3,8 +3,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 
 use std::fs;
-
-const UA: &str = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36";
+use crate::constant::{PROXY_FILE, COOKIE_FILE, UA};
 
 #[derive(Serialize, Deserialize)]
 struct ProxyProvider {
@@ -25,8 +24,8 @@ impl ProxyProvider {
 
 lazy_static! {
     static ref PROXY_PROVIDER: ProxyProvider =
-        serde_json::from_str(fs::read_to_string("proxies.json").unwrap().as_str()).unwrap();
-    static ref COOKIE: String = fs::read_to_string("cookie.txt").unwrap();
+        serde_json::from_str(fs::read_to_string(PROXY_FILE).unwrap().as_str()).unwrap();
+    static ref COOKIE: String = fs::read_to_string(COOKIE_FILE).unwrap();
 }
 
 fn make_headers() -> HeaderMap {
