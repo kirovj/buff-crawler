@@ -73,10 +73,10 @@ fn create_db() -> Result<Connection, rusqlite::Error> {
 fn init_base_data() -> Result<(), rusqlite::Error> {
     let conn = create_db()?;
     let mut stmt = conn.prepare("insert into ItemType (name, name_zh) values (?1, ?2)")?;
-    stmt.execute(params!["Kinfe", "刀"]);
+    stmt.execute(params!["Knife", "刀"]);
     stmt.execute(params!["Pistol", "手枪"]);
     stmt.execute(params!["Rifle", "步枪"]);
-    stmt.execute(params!["SubmachineGun", "冲锋枪"]);
+    stmt.execute(params!["SubMachineGun", "冲锋枪"]);
     stmt.execute(params!["Shotgun", "霰弹枪"]);
     stmt.execute(params!["MachineGun", "机枪"]);
     stmt.execute(params!["Sticker", "贴纸"]);

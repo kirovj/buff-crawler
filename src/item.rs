@@ -1,9 +1,9 @@
 // 类别
 pub enum ItemType {
-    Kinfe,
+    Knife,
     Pistol,
     Rifle,
-    SubmachineGun,
+    SubMachineGun,
     Shotgun,
     MachineGun,
     Sticker,
