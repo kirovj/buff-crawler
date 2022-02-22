@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use rusqlite::{Connection, params, Result, Row};
-use crate::item::{Item, Type};
+use crate::item::{Item, ItemType, Type};
 use crate::PriceInfo;
 
 const DB_FILE: &'static str = "data.db";
@@ -72,7 +72,7 @@ fn create_db() -> Result<Connection, rusqlite::Error> {
 #[allow(unused)]
 fn init_base_data() -> Result<(), rusqlite::Error> {
     let conn = create_db()?;
-    let mut stmt = conn.prepare("insert into Typo (name, name_zh) values (?1, ?2)")?;
+    let mut stmt = conn.prepare("insert into ItemType (name, name_zh) values (?1, ?2)")?;
     stmt.execute(params!["Kinfe", "刀"]);
     stmt.execute(params!["Pistol", "手枪"]);
     stmt.execute(params!["Rifle", "步枪"]);
@@ -115,49 +115,58 @@ fn load_db() -> Result<Connection, rusqlite::Error> {
     Ok(conn)
 }
 
-fn select_db() -> Result<(), rusqlite::Error> {
+fn select_types(table: &str) -> Result<HashMap<String, Type>, rusqlite::Error> {
     let conn = load_db()?;
-    let mut stmt = conn.prepare("select * from typo")?;
-    let mut types = stmt.query_map([], |row| {
-        Ok(Type {
+    let mut stmt = conn.prepare("select * from " + table)?;
+    let mut map: HashMap<String, Type> = HashMap::new();
+    stmt.query_map([], |row| {
+        let typo: Type = Type {
             id: row.get(0)?,
             name: row.get(1)?,
             name_zh: row.get(2)?,
-        })
+        };
+        map.insert(typo.name.to_lowercase(), typo);
+        Ok(())
     })?;
-    for typo in types {
-        println!("{:?}", typo.unwrap());
-    }
-    Ok(())
+    Ok(map)
 }
 
 struct DbHelper {
     conn: Connection,
-    // typos: HashMap<String, usize>,
+    item_types: HashMap<String, Type>,
+    ware_types: HashMap<String, Type>,
+    qualities: HashMap<String, Type>,
+    rarities: HashMap<String, Type>,
 }
 
 impl DbHelper {
     fn new(conn: Connection) -> DbHelper {
-        DbHelper { conn }
+        DbHelper {
+            conn,
+            item_types: select_types("ItemType").unwrap(),
+            ware_types: select_types("WearType").unwrap(),
+            qualities: select_types("Quality").unwrap(),
+            rarities: select_types("Rarity").unwrap(),
+        }
     }
 
     fn default() -> DbHelper {
         DbHelper::new(load_db().unwrap())
     }
 
-    fn add_item(&self, item: Item) {
-        // self.conn.execute(
-        //     "INSERT INTO Item (typo, name, ware_type, quality, rarity, stat_trak) VALUES(?1, ?2, ?3, ?4, ?5, ?6);",
-        //     params![
-        //         item.typo,
-        //         item.name,
-        //         item.ware_type,
-        //         item.quality,
-        //         item.rarity,
-        //         item.stat_trak
-        //     ],
-        // );
-    }
+    // fn add_item(&self, item: Item) {
+    //     self.conn.execute(
+    //         "INSERT INTO Item (typo, name, ware_type, quality, rarity, stat_trak) VALUES(?1, ?2, ?3, ?4, ?5, ?6);",
+    //         params![
+    //             ItemType::from(item.typo),
+    //             item.name,
+    //             item.ware_type,
+    //             item.quality,
+    //             item.rarity,
+    //             item.stat_trak
+    //         ],
+    //     );
+    // }
 
     fn add_price_info(&self, price_info: PriceInfo) {
         self.conn.execute(
@@ -188,22 +197,22 @@ mod tests {
 
     #[test]
     fn test_select() {
-        assert!(super::select_db().is_ok())
+        assert!(super::select_types("ItemType").is_ok())
     }
 
     #[test]
     fn test_add_item() {
-        let db_helper = DbHelper::default();
-        let item = Item {
-            id: 0,
-            typo: ItemType::Kinfe,
-            name: "蝴蝶刀".to_string(),
-            ware_type: WearType::NoWare,
-            quality: Quality::ConsumerGrade,
-            rarity: Rarity::Common,
-            stat_trak: false,
-        };
-        db_helper.add_item(item);
-        assert!(true)
+        // let db_helper = DbHelper::default();
+        // let item = Item {
+        //     id: 0,
+        //     typo: ItemType::Kinfe,
+        //     name: "蝴蝶刀".to_string(),
+        //     ware_type: WearType::NoWare,
+        //     quality: Quality::ConsumerGrade,
+        //     rarity: Rarity::Common,
+        //     stat_trak: false,
+        // };
+        // db_helper.add_item(item);
+        // assert!(true)
     }
 }
