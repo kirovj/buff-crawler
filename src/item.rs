@@ -52,11 +52,11 @@ pub struct Type {
 
 pub struct Item {
     pub id: u32,
-    pub typo: ItemType,
     pub name: String,
-    pub ware_type: WearType,
-    pub quality: Quality,
-    pub rarity: Rarity,
+    pub item_type: String,
+    pub ware_type: String,
+    pub quality: String,
+    pub rarity: String,
     pub stat_trak: bool,
 }
 

@@ -12,7 +12,7 @@ fn create_db() -> Result<Connection, rusqlite::Error> {
     let _ = conn.execute("drop table Quality", []);
     let _ = conn.execute("drop table Rarity", []);
     let _ = conn.execute(
-        "create table Typo (
+        "create table ItemType (
             id      INTEGER PRIMARY KEY AUTOINCREMENT,
             name    TEXT NOT NULL,
             name_zh TEXT NOT NULL
@@ -99,6 +99,7 @@ fn init_base_data() -> Result<(), rusqlite::Error> {
     stmt.execute(params!["Restricted", "受限"]);
     stmt.execute(params!["Classified", "保密"]);
     stmt.execute(params!["Covert", "隐秘"]);
+    stmt.execute(params!["Unusual", "★"]);
     stmt.execute(params!["ContrabandItems", "违禁品"]);
 
     let mut stmt = conn.prepare("insert into Rarity (name, name_zh) values (?1, ?2)")?;
@@ -117,7 +118,7 @@ fn load_db() -> Result<Connection, rusqlite::Error> {
 
 fn select_types(table: &str) -> Result<HashMap<String, Type>, rusqlite::Error> {
     let conn = load_db()?;
-    let mut stmt = conn.prepare("select * from " + table)?;
+    let mut stmt = conn.prepare(("select * from ".to_string() + table).as_str())?;
     let mut map: HashMap<String, Type> = HashMap::new();
     stmt.query_map([], |row| {
         let typo: Type = Type {
@@ -154,19 +155,19 @@ impl DbHelper {
         DbHelper::new(load_db().unwrap())
     }
 
-    // fn add_item(&self, item: Item) {
-    //     self.conn.execute(
-    //         "INSERT INTO Item (typo, name, ware_type, quality, rarity, stat_trak) VALUES(?1, ?2, ?3, ?4, ?5, ?6);",
-    //         params![
-    //             ItemType::from(item.typo),
-    //             item.name,
-    //             item.ware_type,
-    //             item.quality,
-    //             item.rarity,
-    //             item.stat_trak
-    //         ],
-    //     );
-    // }
+    fn add_item(&self, item: Item) {
+        self.conn.execute(
+            "INSERT INTO Item (name, item_type, ware_type, quality, rarity, stat_trak) VALUES(?1, ?2, ?3, ?4, ?5, ?6);",
+            params![
+                item.name,
+                item.item_type,
+                item.ware_type,
+                item.quality,
+                item.rarity,
+                item.stat_trak
+            ],
+        );
+    }
 
     fn add_price_info(&self, price_info: PriceInfo) {
         self.conn.execute(
@@ -202,17 +203,18 @@ mod tests {
 
     #[test]
     fn test_add_item() {
-        // let db_helper = DbHelper::default();
-        // let item = Item {
-        //     id: 0,
-        //     typo: ItemType::Kinfe,
-        //     name: "蝴蝶刀".to_string(),
-        //     ware_type: WearType::NoWare,
-        //     quality: Quality::ConsumerGrade,
-        //     rarity: Rarity::Common,
-        //     stat_trak: false,
-        // };
-        // db_helper.add_item(item);
-        // assert!(true)
+        let db_helper = DbHelper::default();
+        let typo = db_helper.item_types.get("knife").unwrap();
+        let item = Item {
+            id: 0,
+            item_type: "knife".to_string(),
+            name: "蝴蝶刀".to_string(),
+            ware_type: "久经沙场".to_string(),
+            quality: "★".to_string(),
+            rarity: "隐秘".to_string(),
+            stat_trak: false,
+        };
+        db_helper.add_item(item);
+        assert!(true)
     }
 }
