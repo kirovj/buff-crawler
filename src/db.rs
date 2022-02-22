@@ -6,7 +6,7 @@ fn create_db() -> Result<Connection, rusqlite::Error> {
 
     let _ = conn.execute("drop table typo", []);
 
-    conn.execute(
+    let _ = conn.execute(
         "create table typo (
             id      INTEGER PRIMARY KEY,
             name    TEXT NOT NULL
@@ -32,6 +32,6 @@ mod tests {
 
     #[test]
     fn test_load_db() {
-        panic!("Make this test fail");
+        assert!(super::load_db().is_ok());
     }
 }
