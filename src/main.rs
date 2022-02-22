@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-// mod db;
+mod db;
 mod http;
 mod item;
 

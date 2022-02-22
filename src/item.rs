@@ -1,5 +1,5 @@
 // 类别
-enum Typo {
+pub enum Typo {
     Kinfe,
     Pistol,
     Rifle,
@@ -13,7 +13,8 @@ enum Typo {
 }
 
 // 磨损种类
-enum WearType {
+pub enum WearType {
+    NoWare,
     FactoryNew,
     MinimalWare,
     FieldTested,
@@ -22,7 +23,7 @@ enum WearType {
 }
 
 // 品质
-enum Quality {
+pub enum Quality {
     ConsumerGrade,
     IndustrialGrade,
     MilSpec,
@@ -34,9 +35,9 @@ enum Quality {
 }
 
 // 稀有
-enum Rarity {
+pub enum Rarity {
     Common,
-    LessCommon,
+    Advanced,
     Rare,
     Mythical,
     Legendary,
@@ -48,7 +49,7 @@ enum Rarity {
 pub struct Item {
     id: u32,
     typo: Typo,
-    catagory: String,
+    category: String,
     name: String,
     ware_type: WearType,
     quality: Quality,
