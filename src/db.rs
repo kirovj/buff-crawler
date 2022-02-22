@@ -8,8 +8,8 @@ fn create_db() -> Result<Connection, rusqlite::Error> {
 
     conn.execute(
         "create table typo (
-            id  INTEGER PRIMARY KEY;
-            name    TEXT NOT NULL;
+            id      INTEGER PRIMARY KEY,
+            name    TEXT NOT NULL
         )",
         [],
     );
