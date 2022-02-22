@@ -49,6 +49,7 @@ pub async fn request(url: &str) -> Result<serde_json::Value, reqwest::Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_proxy_provider() {
         assert_eq!(9, PROXY_PROVIDER.addrs.len())
