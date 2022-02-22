@@ -37,13 +37,10 @@ pub enum Quality {
 // 稀有
 pub enum Rarity {
     Common,
-    Advanced,
     Rare,
-    Mythical,
     Legendary,
+    Mythical,
     Ancient,
-    DevastatinglyRare,
-    Immortal,
 }
 
 pub struct Item {

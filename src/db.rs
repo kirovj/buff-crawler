@@ -79,9 +79,8 @@ fn init_base_data() -> Result<(), rusqlite::Error> {
     let mut stmt = conn.prepare("insert into Rarity (name, name_zh) values (?1, ?2)")?;
     stmt.execute(params!["Common", "普通"]);
     stmt.execute(params!["Rare", "高级"]);
-    stmt.execute(params!["Rare", "奇异"]);
-    stmt.execute(params!["Mythical", "卓越"]);
     stmt.execute(params!["Legendary", "奇异"]);
+    stmt.execute(params!["Mythical", "卓越"]);
     stmt.execute(params!["Ancient", "非凡"]);
     Ok(())
 }
