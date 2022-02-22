@@ -14,6 +14,7 @@ pub enum Typo {
 
 // 磨损种类
 pub enum WearType {
+    NoWare,
     FactoryNew,
     MinimalWare,
     FieldTested,
@@ -36,7 +37,7 @@ pub enum Quality {
 // 稀有
 pub enum Rarity {
     Common,
-    LessCommon,
+    Advanced,
     Rare,
     Mythical,
     Legendary,
