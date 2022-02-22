@@ -1,5 +1,5 @@
 // 类别
-pub enum Typo {
+pub enum ItemType {
     Kinfe,
     Pistol,
     Rifle,
@@ -43,23 +43,29 @@ pub enum Rarity {
     Ancient,
 }
 
+#[derive(Debug)]
+pub struct Type {
+    pub id: u32,
+    pub name: String,
+    pub name_zh: String,
+}
+
 pub struct Item {
-    id: u32,
-    typo: Typo,
-    category: String,
-    name: String,
-    ware_type: WearType,
-    quality: Quality,
-    rarity: Rarity,
-    stat_trak: bool,
+    pub id: u32,
+    pub typo: ItemType,
+    pub name: String,
+    pub ware_type: WearType,
+    pub quality: Quality,
+    pub rarity: Rarity,
+    pub stat_trak: bool,
 }
 
 #[derive(Debug)]
 pub struct PriceInfo {
-    id: usize,
-    item_id: u32,
-    date: String,
-    price: f32,
+    pub id: usize,
+    pub item_id: u32,
+    pub date: String,
+    pub price: f32,
 }
 
 impl PriceInfo {

@@ -1,10 +1,12 @@
-use rusqlite::{Connection, params, Result};
-use crate::item;
-use crate::item::Typo;
+use std::collections::HashMap;
+use rusqlite::{Connection, params, Result, Row};
+use crate::item::{Item, Type};
+use crate::PriceInfo;
+
+const DB_FILE: &'static str = "data.db";
 
 fn create_db() -> Result<Connection, rusqlite::Error> {
-    let database = "data.db";
-    let conn = Connection::open(database)?;
+    let conn = Connection::open(DB_FILE)?;
     let _ = conn.execute("drop table Typo", []);
     let _ = conn.execute("drop table WearType", []);
     let _ = conn.execute("drop table Quality", []);
@@ -41,6 +43,29 @@ fn create_db() -> Result<Connection, rusqlite::Error> {
         )",
         [],
     );
+    let _ = conn.execute(
+        "create table Item (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            typo      INTEGER NOT NULL,
+            category  TEXT NOT NULL,
+            name      TEXT NOT NULL,
+            ware_type INTEGER NOT NULL,
+            quality   INTEGER,
+            rarity    INTEGER,
+            stat_trak INTEGER NOT NULL
+        )",
+        [],
+    );
+    let _ = conn.execute(
+        "create table PriceInfo (
+            id      INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_id INTEGER NOT NULL,
+            date    TEXT NOT NULL,
+            price   REAL NOT NULL
+        )",
+        [],
+    );
+
     Ok(conn)
 }
 
@@ -86,20 +111,99 @@ fn init_base_data() -> Result<(), rusqlite::Error> {
 }
 
 fn load_db() -> Result<Connection, rusqlite::Error> {
-    let database = "data.db";
-    let conn = Connection::open(database)?;
+    let conn = Connection::open(DB_FILE)?;
     Ok(conn)
+}
+
+fn select_db() -> Result<(), rusqlite::Error> {
+    let conn = load_db()?;
+    let mut stmt = conn.prepare("select * from typo")?;
+    let mut types = stmt.query_map([], |row| {
+        Ok(Type {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            name_zh: row.get(2)?,
+        })
+    })?;
+    for typo in types {
+        println!("{:?}", typo.unwrap());
+    }
+    Ok(())
+}
+
+struct DbHelper {
+    conn: Connection,
+    // typos: HashMap<String, usize>,
+}
+
+impl DbHelper {
+    fn new(conn: Connection) -> DbHelper {
+        DbHelper { conn }
+    }
+
+    fn default() -> DbHelper {
+        DbHelper::new(load_db().unwrap())
+    }
+
+    fn add_item(&self, item: Item) {
+        // self.conn.execute(
+        //     "INSERT INTO Item (typo, name, ware_type, quality, rarity, stat_trak) VALUES(?1, ?2, ?3, ?4, ?5, ?6);",
+        //     params![
+        //         item.typo,
+        //         item.name,
+        //         item.ware_type,
+        //         item.quality,
+        //         item.rarity,
+        //         item.stat_trak
+        //     ],
+        // );
+    }
+
+    fn add_price_info(&self, price_info: PriceInfo) {
+        self.conn.execute(
+            "INSERT INTO PriceInfo (item_id, date, price) VALUES(?1, ?2, ?3);",
+            params![
+                price_info.item_id,
+                price_info.date,
+                price_info.price,
+            ],
+        );
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::db::DbHelper;
+    use crate::item::*;
+
     #[test]
     fn test_create_db() {
         assert!(super::create_db().is_ok());
     }
 
     #[test]
-    fn test_insert() {
+    fn test_init_base_data() {
         assert!(super::init_base_data().is_ok());
+    }
+
+    #[test]
+    fn test_select() {
+        assert!(super::select_db().is_ok())
+    }
+
+    #[test]
+    fn test_add_item() {
+        let db_helper = DbHelper::default();
+        let item = Item {
+            id: 0,
+            typo: ItemType::Kinfe,
+            name: "蝴蝶刀".to_string(),
+            ware_type: WearType::NoWare,
+            quality: Quality::ConsumerGrade,
+            rarity: Rarity::Common,
+            stat_trak: false,
+        };
+        db_helper.add_item(item);
+        assert!(true)
     }
 }
