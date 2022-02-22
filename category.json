@@ -1,0 +1,39 @@
+{
+  "item_types": [
+    "Knife|刀",
+    "Pistol|手枪",
+    "Rifle|步枪",
+    "SubMachineGun|冲锋枪",
+    "Shotgun|霰弹枪",
+    "MachineGun|机枪",
+    "Sticker|贴纸",
+    "Gloves|手套",
+    "Agent|探员",
+    "Other|其他"
+  ],
+  "wear_types": [
+    "NoWare|无磨损",
+    "FactoryNew|崭新出产",
+    "MinimalWare|略有磨损",
+    "FieldTested|久经沙场",
+    "WellWorn|破损不堪",
+    "BattleScarred|战痕累累"
+  ],
+  "qualities": [
+    "ConsumerGrade|消费级",
+    "IndustrialGrade|工业级",
+    "MilSpec|军规级",
+    "Restricted|受限",
+    "Classified|保密",
+    "Covert|隐秘",
+    "Unusual|★",
+    "ContrabandItems|违禁品"
+  ],
+  "rarities": [
+    "Common|普通",
+    "Rare|高级",
+    "Legendary|奇异",
+    "Mythical|卓越",
+    "Ancient|非凡"
+  ]
+}

@@ -1,15 +1,18 @@
 #[macro_use]
 extern crate lazy_static;
 
+mod constant;
 mod db;
 mod http;
 mod item;
 
+use item::{PriceInfo, Categories};
+
 use futures::future::join_all;
-use item::PriceInfo;
 use serde_json::Value;
 
 use std::error::Error;
+use std::fs;
 
 fn deal_response(value: &Value) {
     let code = &value["code"].as_str();
