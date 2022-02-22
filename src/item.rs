@@ -48,7 +48,7 @@ enum Rarity {
 pub struct Item {
     id: u32,
     typo: Typo,
-    catagory: String,
+    category: String,
     name: String,
     ware_type: WearType,
     quality: Quality,
