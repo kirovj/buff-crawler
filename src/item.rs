@@ -1,5 +1,5 @@
 // 类别
-enum Typo {
+pub enum Typo {
     Kinfe,
     Pistol,
     Rifle,
@@ -13,7 +13,7 @@ enum Typo {
 }
 
 // 磨损种类
-enum WearType {
+pub enum WearType {
     FactoryNew,
     MinimalWare,
     FieldTested,
@@ -22,7 +22,7 @@ enum WearType {
 }
 
 // 品质
-enum Quality {
+pub enum Quality {
     ConsumerGrade,
     IndustrialGrade,
     MilSpec,
@@ -34,7 +34,7 @@ enum Quality {
 }
 
 // 稀有
-enum Rarity {
+pub enum Rarity {
     Common,
     LessCommon,
     Rare,
