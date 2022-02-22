@@ -10,12 +10,11 @@ fn create_db() -> Result<(), rusqlite::Error> {
     let _ = conn.execute(
         "create table Item (
             id        INTEGER PRIMARY KEY AUTOINCREMENT,
-            typo      INTEGER NOT NULL,
-            category  TEXT NOT NULL,
             name      TEXT NOT NULL,
-            ware_type INTEGER NOT NULL,
-            quality   INTEGER,
-            rarity    INTEGER,
+            item_type TEXT NOT NULL,
+            ware_type TEXT NOT NULL,
+            quality   TEXT,
+            rarity    TEXT,
             stat_trak INTEGER NOT NULL
         )",
         [],
@@ -91,8 +90,8 @@ mod tests {
         let db_helper = DbHelper::default();
         let item = Item {
             id: 0,
-            item_type: "knife".to_string(),
             name: "蝴蝶刀".to_string(),
+            item_type: "刀".to_string(),
             ware_type: "久经沙场".to_string(),
             quality: "★".to_string(),
             rarity: "隐秘".to_string(),
