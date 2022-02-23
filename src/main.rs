@@ -6,110 +6,131 @@ mod db;
 mod http;
 mod item;
 
-use item::{PriceInfo, Category};
-use constant::CATEGORY_FILE;
+use item::PriceInfo;
+use constant::DB_FILE;
 
 use serde_json::Value;
 
 use std::error::Error;
 use std::fs;
 use std::{thread, time};
+use chrono::Local;
 use regex::Regex;
-use crate::constant::API;
+use crate::constant::{API, DEFAULT};
 use crate::http::request;
 use crate::item::Item;
+use crate::db::DbHelper;
 
-lazy_static! {
-    static ref CATEGORY: Category = Category::from_json(CATEGORY_FILE);
+struct Crawler {
+    db_helper: DbHelper,
 }
 
-fn process(value: &Value) -> u8 {
-    let data = &value["data"];
-    match &data["total_page"].as_u64() {
-        Some(p) => {
-            match &data["items"].as_array() {
-                Some(items) => {
-                    items.into_iter().map(|item| process_item(item));
-                }
-                _ => {}
+impl Crawler {
+    fn new(db_file: &str) -> Crawler {
+        let db_helper = DbHelper::new(db_file);
+        Crawler { db_helper }
+    }
+
+    fn run(&self) -> Result<(), Box<dyn Error>> {
+        let url_entrance = "https://buff.163.com/market/csgo";
+
+        let html = request(url_entrance)?;
+        let re = Regex::new("<li value=\"([^\"]+)\">([^<]*)</li>")?;
+        let items = re.captures_iter(html.as_str()).filter_map(|cap| {
+            match (cap.get(1), cap.get(2)) {
+                (Some(name), Some(name_zh)) => Some((name.as_str(), name_zh.as_str())),
+                _ => None,
             }
-            *p as u8
+        }).collect::<Vec<(&str, &str)>>();
+
+        for (name, name_zh) in items {
+            println!("start crawl {}", name_zh);
+            let mut page: u8 = 1;
+            loop {
+                match request(self.build_url(name, page).as_str()) {
+                    Ok(r) => match &serde_json::from_str(r.as_str()) {
+                        Ok(v) => if page > self.process(v) {
+                            break;
+                        },
+                        _ => {
+                            println!("read json failed!");
+                            break;
+                        }
+                    },
+                    _ => {
+                        println!("request failed!");
+                        break;
+                    }
+                };
+                thread::sleep(time::Duration::from_secs(3));
+                page += 1;
+            }
         }
-        _ => 0
+        Ok(())
     }
-}
 
-fn process_item(v: &Value) {
-    match build_item(v) {
-        Ok(item) => {}
-        _ => {}
+    fn process(&self, value: &Value) -> u8 {
+        let data = &value["data"];
+        let total_page = match &data["total_page"].as_u64() {
+            Some(p) => {
+                match &data["items"].as_array() {
+                    Some(items) => {
+                        for item in *items {
+                            self.process_item(item);
+                        }
+                    }
+                    _ => {}
+                }
+                *p as u8
+            }
+            _ => 0
+        };
+        println!("total page: {}", total_page);
+        total_page
     }
-}
 
-fn build_item(value: &Value) -> Result<Item, Box<dyn Error>> {
-    let info = &value["goods_info"]["info"]["tags"];
-    let exterior = &info["exterior"];
-    let quality = &info["quality"];
-    let rarity = &info["rarity"];
-    let typo = &info["typo"];
-    let weapon = &info["weapon"];
-    Ok(Item{
-        id: 0,
-        name: "".to_string(),
-        class: "".to_string(),
-        typo: "".to_string(),
-        ware: "".to_string(),
-        quality: "".to_string(),
-        rarity: "".to_string(),
-        stat_trak: false
-    })
-}
+    fn get_value(&self, value: &Value, key: &str) -> String {
+        value[key]["localized_name"].as_str().unwrap_or(DEFAULT).to_string()
+    }
 
-fn build_price_info(item_id: u32, price: f32) -> Result<PriceInfo, Box<dyn Error>> {
-    let item_id = 1;
-    let date = "2022-02-17".to_string();
-    Ok(PriceInfo::new(0, item_id, date, price))
-}
+    fn process_item(&self, value: &Value) {
+        let name = &value["short_name"].as_str().unwrap();
+        let info = &value["goods_info"]["info"]["tags"];
+        let ware = self.get_value(info, "exterior");
+        let quality = self.get_value(info, "quality");
+        let rarity = self.get_value(info, "rarity");
+        let class = self.get_value(info, "type");
+        let typo = self.get_value(info, "weapon");
+        let stat_trak = quality.contains("StatTrak");
+        print!("process item {}: ", name);
+        let item = Item::new(name.to_string(), class, typo, ware, quality, rarity, stat_trak);
+        match self.db_helper.get_item_id(&item) {
+            None => {}
+            Some(id) => {
+                let date = Local::now().format("%Y-%m-%d").to_string();
+                let price = &value["sell_min_price"].as_str().unwrap();
+                println!("get price {} at {}", price, date);
+                match price.parse::<f32>() {
+                    Ok(p) => self.db_helper.add_price_info(&PriceInfo::new(id, date, p.round() as usize)),
+                    _ => println!("parse price {} err", price)
+                }
+            }
+        };
+    }
 
-fn build_url(category: &str, page: u8) -> String {
-    let mut api = String::from(API);
-    api.push_str("&page_num=");
-    api.push_str(page.to_string().as_str());
-    api.push_str("&category=");
-    api.push_str(category);
-    api
+    fn build_url(&self, category: &str, page: u8) -> String {
+        let mut api = String::from(API);
+        api.push_str("&page_num=");
+        api.push_str(page.to_string().as_str());
+        api.push_str("&category=");
+        api.push_str(category);
+        println!("build url {}", api);
+        api
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let url_entrance = "https://buff.163.com/market/csgo";
-
-    let html = request(url_entrance)?;
-    let re = Regex::new("<li value=\"([^\"]+)\">([^<]*)</li>")?;
-    let items = re.captures_iter(html.as_str()).filter_map(|cap| {
-        match (cap.get(1), cap.get(2)) {
-            (Some(name), Some(name_zh)) => Some((name.as_str(), name_zh.as_str())),
-            _ => None,
-        }
-    }).collect::<Vec<(&str, &str)>>();
-
-    for (name, name_zh) in items {
-        println!("start crawl {}|{}", name, name_zh);
-        let mut page: u8 = 1;
-        loop {
-            match request(build_url(name, page).as_str()) {
-                Ok(r) => match &serde_json::from_str(r.as_str()) {
-                    Ok(v) => if page > process(v) {
-                        break;
-                    },
-                    _ => break,
-                },
-                _ => break,
-            };
-            thread::sleep(time::Duration::from_secs(3));
-            page += 1;
-        }
-        break;
-    }
-
+    let crawler = Crawler::new(DB_FILE);
+    crawler.run();
     Ok(())
 }
