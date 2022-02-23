@@ -7,7 +7,7 @@ mod http;
 mod item;
 
 use item::{PriceInfo, Category};
-use constant::CATEGORY_FILE;
+use constant::{CATEGORY_FILE, DB_FILE};
 
 use serde_json::Value;
 
@@ -23,6 +23,19 @@ use crate::db::DbHelper;
 
 lazy_static! {
     static ref CATEGORY: Category = Category::from_json(CATEGORY_FILE);
+}
+
+struct Crawler {
+    db_helper: DbHelper,
+}
+
+impl Crawler {
+    fn new(db_file: &str) -> Crawler {
+        let db_helper = DbHelper::new(db_file);
+        Crawler { db_helper }
+    }
+
+    fn run() {}
 }
 
 fn process(value: &Value) -> u8 {

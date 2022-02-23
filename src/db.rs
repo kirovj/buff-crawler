@@ -4,16 +4,16 @@ use crate::constant::DB_FILE;
 use crate::item::Item;
 use crate::PriceInfo;
 
-pub static DB_HELPER: DbHelper = {
-    let conn = Connection::open(DB_FILE).unwrap();
-    DbHelper { conn }
-};
 
 pub struct DbHelper {
     conn: Connection,
 }
 
 impl DbHelper {
+    pub fn new(db_file: &str) -> DbHelper {
+        let conn = Connection::open(db_file).unwrap();
+        DbHelper { conn }
+    }
 
     fn find_item_id(&self, item: &Item) -> Result<u32> {
         let mut stmt = self.conn.prepare(
@@ -78,7 +78,7 @@ impl DbHelper {
 mod tests {
     use rusqlite::Connection;
     use crate::constant::DB_FILE;
-    use crate::db::{DB_HELPER, DbHelper};
+    use super::DbHelper;
     use crate::item::*;
 
     fn create_db() -> Result<(), rusqlite::Error> {
@@ -129,13 +129,15 @@ mod tests {
     #[test]
     fn test_add_item() {
         let item = test_item();
-        DB_HELPER.add_item(&item);
+        let db_helper = DbHelper::new(DB_FILE);
+        db_helper.add_item(&item);
         assert!(true)
     }
 
     #[test]
     fn test_get_item_id() {
         let item = test_item();
-        assert_eq!(Some(1), DB_HELPER.get_item_id(&item));
+        let db_helper = DbHelper::new(DB_FILE);
+        assert_eq!(Some(1), db_helper.get_item_id(&item));
     }
 }
