@@ -25,8 +25,6 @@ lazy_static! {
     static ref CATEGORY: Category = Category::from_json(CATEGORY_FILE);
 }
 
-const DB_HELPER: DbHelper = DbHelper::default();
-
 fn process(value: &Value) -> u8 {
     let data = &value["data"];
     match &data["total_page"].as_u64() {

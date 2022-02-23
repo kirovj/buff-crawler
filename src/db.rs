@@ -4,23 +4,16 @@ use crate::constant::DB_FILE;
 use crate::item::Item;
 use crate::PriceInfo;
 
-fn load_db() -> Result<Connection, rusqlite::Error> {
-    let conn = Connection::open(DB_FILE)?;
-    Ok(conn)
-}
+pub static DB_HELPER: DbHelper = {
+    let conn = Connection::open(DB_FILE).unwrap();
+    DbHelper { conn }
+};
 
 pub struct DbHelper {
     conn: Connection,
 }
 
 impl DbHelper {
-    pub fn new(conn: Connection) -> DbHelper {
-        DbHelper { conn }
-    }
-
-    pub fn default() -> DbHelper {
-        DbHelper::new(load_db().unwrap())
-    }
 
     fn find_item_id(&self, item: &Item) -> Result<u32> {
         let mut stmt = self.conn.prepare(
@@ -85,7 +78,7 @@ impl DbHelper {
 mod tests {
     use rusqlite::Connection;
     use crate::constant::DB_FILE;
-    use crate::db::DbHelper;
+    use crate::db::{DB_HELPER, DbHelper};
     use crate::item::*;
 
     fn create_db() -> Result<(), rusqlite::Error> {
@@ -135,16 +128,14 @@ mod tests {
 
     #[test]
     fn test_add_item() {
-        let db_helper = DbHelper::default();
         let item = test_item();
-        db_helper.add_item(&item);
+        DB_HELPER.add_item(&item);
         assert!(true)
     }
 
     #[test]
     fn test_get_item_id() {
-        let db_helper = DbHelper::default();
         let item = test_item();
-        assert_eq!(Some(1), db_helper.get_item_id(&item));
+        assert_eq!(Some(1), DB_HELPER.get_item_id(&item));
     }
 }
