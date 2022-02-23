@@ -6,8 +6,8 @@ mod db;
 mod http;
 mod item;
 
-use item::{PriceInfo, Category};
-use constant::{CATEGORY_FILE, DB_FILE};
+use item::PriceInfo;
+use constant::DB_FILE;
 
 use serde_json::Value;
 
@@ -16,14 +16,10 @@ use std::fs;
 use std::{thread, time};
 use chrono::Local;
 use regex::Regex;
-use crate::constant::API;
+use crate::constant::{API, DEFAULT};
 use crate::http::request;
 use crate::item::Item;
 use crate::db::DbHelper;
-
-lazy_static! {
-    static ref CATEGORY: Category = Category::from_json(CATEGORY_FILE);
-}
 
 struct Crawler {
     db_helper: DbHelper,
@@ -84,16 +80,22 @@ impl Crawler {
         }
     }
 
+    fn get_value(&self, value: &Value, key: &str) -> String {
+        value[key]["localized_name"].as_str().unwrap_or(DEFAULT).to_string()
+    }
+
     fn process_item(&self, value: &Value) {
+        let name = *&value["short_name"].as_str().unwrap();
         let info = &value["goods_info"]["info"]["tags"];
-        let exterior = &info["exterior"];
-        let quality = &info["quality"];
-        let rarity = &info["rarity"];
-        let typo = &info["typo"];
-        let weapon = &info["weapon"];
-        let item = Item::new("".to_string(), "".to_string(), "".to_string(), "".to_string(), "".to_string(), "".to_string(), false, );
+        let ware = self.get_value(info, "exterior");
+        let quality = self.get_value(info, "quality");
+        let rarity = self.get_value(info, "rarity");
+        let class = self.get_value(info, "type");
+        let typo = self.get_value(info, "weapon");
+        let stat_trak = quality.contains("StatTrak");
+        let item = Item::new(name.to_string(), class, typo, ware, quality, rarity, stat_trak);
         match self.db_helper.get_item_id(&item) {
-            None => {},
+            None => {}
             Some(id) => {
                 let date = Local::now().format("%Y-%m-%d").to_string();
                 let price = &value["sell_min_price"].as_f64().unwrap();
