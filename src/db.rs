@@ -9,16 +9,16 @@ fn load_db() -> Result<Connection, rusqlite::Error> {
     Ok(conn)
 }
 
-struct DbHelper {
+pub struct DbHelper {
     conn: Connection,
 }
 
 impl DbHelper {
-    fn new(conn: Connection) -> DbHelper {
+    pub fn new(conn: Connection) -> DbHelper {
         DbHelper { conn }
     }
 
-    fn default() -> DbHelper {
+    pub fn default() -> DbHelper {
         DbHelper::new(load_db().unwrap())
     }
 

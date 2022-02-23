@@ -14,14 +14,18 @@ use serde_json::Value;
 use std::error::Error;
 use std::fs;
 use std::{thread, time};
+use chrono::Local;
 use regex::Regex;
 use crate::constant::API;
 use crate::http::request;
 use crate::item::Item;
+use crate::db::DbHelper;
 
 lazy_static! {
     static ref CATEGORY: Category = Category::from_json(CATEGORY_FILE);
 }
+
+const DB_HELPER: DbHelper = DbHelper::default();
 
 fn process(value: &Value) -> u8 {
     let data = &value["data"];
@@ -46,14 +50,20 @@ fn process_item(v: &Value) {
     }
 }
 
-fn build_item(value: &Value) -> Result<Item, Box<dyn Error>> {
+fn build_item(value: &Value) -> Result<(Item, PriceInfo), Box<dyn Error>> {
+    let item_id = 1;
+    let date = Local::now().format("%Y-%m-%d").to_string();
+    let price = &value["sell_min_price"].as_f64().unwrap();
+    let price_info = PriceInfo::new(0, item_id, date, *price as f32);
+
     let info = &value["goods_info"]["info"]["tags"];
     let exterior = &info["exterior"];
     let quality = &info["quality"];
     let rarity = &info["rarity"];
     let typo = &info["typo"];
     let weapon = &info["weapon"];
-    Ok(Item{
+
+    let item = Item {
         id: 0,
         name: "".to_string(),
         class: "".to_string(),
@@ -61,14 +71,10 @@ fn build_item(value: &Value) -> Result<Item, Box<dyn Error>> {
         ware: "".to_string(),
         quality: "".to_string(),
         rarity: "".to_string(),
-        stat_trak: false
-    })
-}
+        stat_trak: false,
+    };
 
-fn build_price_info(item_id: u32, price: f32) -> Result<PriceInfo, Box<dyn Error>> {
-    let item_id = 1;
-    let date = "2022-02-17".to_string();
-    Ok(PriceInfo::new(0, item_id, date, price))
+    Ok((item, price_info))
 }
 
 fn build_url(category: &str, page: u8) -> String {

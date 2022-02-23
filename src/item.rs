@@ -78,6 +78,27 @@ pub struct Item {
     pub stat_trak: bool,
 }
 
+impl Item {
+    pub fn new(name: String,
+               class: String,
+               typo: String,
+               ware: String,
+               quality: String,
+               rarity: String,
+               stat_trak: bool, ) -> Item {
+        Item {
+            id: 0,
+            name,
+            class,
+            typo,
+            ware,
+            quality,
+            rarity,
+            stat_trak,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct PriceInfo {
     pub id: usize,
