@@ -108,9 +108,9 @@ pub struct PriceInfo {
 }
 
 impl PriceInfo {
-    pub fn new(id: usize, item_id: u32, date: String, price: f32) -> Self {
+    pub fn new(item_id: u32, date: String, price: f32) -> Self {
         PriceInfo {
-            id,
+            id: 0,
             item_id,
             date,
             price,
