@@ -17,8 +17,8 @@ enum Category {
 }
 
 impl Categories {
-    fn from_json() -> Categories {
-        let json = fs::read_to_string(BASE_DATA_FILE).unwrap();
+    pub fn from_json(path: &str) -> Categories {
+        let json = fs::read_to_string(path).unwrap();
         let value: serde_json::Value = serde_json::from_str(json.as_str()).unwrap();
         Categories {
             item_types: Categories::make_map("item_types", &value),
@@ -41,7 +41,7 @@ impl Categories {
         map
     }
 
-    fn get_type(&self, category: Category, key: String) -> Option<&Type> {
+    pub fn get_type(&self, category: Category, key: String) -> Option<&Type> {
         match category {
             Category::Item => self.item_types.get(&key),
             Category::Wear => self.ware_types.get(&key),

@@ -7,12 +7,17 @@ mod http;
 mod item;
 
 use item::{PriceInfo, Categories};
+use constant::CATEGORY_FILE;
 
 use futures::future::join_all;
 use serde_json::Value;
 
 use std::error::Error;
 use std::fs;
+
+lazy_static! {
+    static ref CATEGORIES: Categories = Categories::from_json(CATEGORY_FILE);
+}
 
 fn deal_response(value: &Value) {
     let code = &value["code"].as_str();
