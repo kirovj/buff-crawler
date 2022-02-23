@@ -22,9 +22,41 @@ impl DbHelper {
         DbHelper::new(load_db().unwrap())
     }
 
-    fn add_item(&self, item: Item) {
+    fn find_item_id(&self, item: &Item) -> Result<u32> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id from Item \
+            where name = ?1 \
+            and class = ?2 \
+            and typo = ?3 \
+            and ware = ?4 \
+            and quality = ?5 \
+            and rarity = ?6 \
+            and stat_trak = ?7"
+        ).unwrap();
+        stmt.query_row(
+            params![item.name, item.class, item.typo, item.ware, item.quality, item.rarity, item.stat_trak],
+            |row| row.get(0),
+        )
+    }
+
+    pub fn get_item_id(&self, item: &Item) -> Option<u32> {
+        match self.find_item_id(item) {
+            Ok(id) => Some(id),
+            _ => {
+                self.add_item(item);
+                match self.find_item_id(item) {
+                    Ok(_id) => Some(_id),
+                    _ => None
+                }
+            }
+        }
+    }
+
+    pub fn add_item(&self, item: &Item) {
         self.conn.execute(
-            "INSERT INTO Item (name, class, typo, ware, quality, rarity, stat_trak) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7);",
+            "INSERT INTO Item \
+            (name, class, typo, ware, quality, rarity, stat_trak) \
+            VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7);",
             params![
                 item.name,
                 item.class,
@@ -37,7 +69,7 @@ impl DbHelper {
         );
     }
 
-    fn add_price_info(&self, price_info: PriceInfo) {
+    pub fn add_price_info(&self, price_info: &PriceInfo) {
         self.conn.execute(
             "INSERT INTO PriceInfo (item_id, date, price) VALUES(?1, ?2, ?3);",
             params![
@@ -65,8 +97,8 @@ mod tests {
             class     TEXT NOT NULL,
             typo      TEXT NOT NULL,
             ware      TEXT NOT NULL,
-            quality   TEXT,
-            rarity    TEXT,
+            quality   TEXT NOT NULL,
+            rarity    TEXT NOT NULL,
             stat_trak INTEGER NOT NULL
         )",
             [],
@@ -88,10 +120,8 @@ mod tests {
         assert!(create_db().is_ok());
     }
 
-    #[test]
-    fn test_add_item() {
-        let db_helper = DbHelper::default();
-        let item = Item {
+    fn test_item() -> Item {
+        Item {
             id: 0,
             name: "蝴蝶刀（★） | 人工染色 (崭新出厂)".to_string(),
             class: "刀".to_string(),
@@ -100,8 +130,21 @@ mod tests {
             quality: "★".to_string(),
             rarity: "隐秘".to_string(),
             stat_trak: false,
-        };
-        db_helper.add_item(item);
+        }
+    }
+
+    #[test]
+    fn test_add_item() {
+        let db_helper = DbHelper::default();
+        let item = test_item();
+        db_helper.add_item(&item);
         assert!(true)
+    }
+
+    #[test]
+    fn test_get_item_id() {
+        let db_helper = DbHelper::default();
+        let item = test_item();
+        assert_eq!(Some(1), db_helper.get_item_id(&item));
     }
 }

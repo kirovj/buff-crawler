@@ -12,7 +12,7 @@
     "Other|其他"
   ],
   "Wear": [
-    "NoWare|无磨损",
+    "NoWare|无",
     "FactoryNew|崭新出产",
     "MinimalWare|略有磨损",
     "FieldTested|久经沙场",
@@ -20,6 +20,7 @@
     "BattleScarred|战痕累累"
   ],
   "Quality": [
+    "NoQuality|无",
     "ConsumerGrade|消费级",
     "IndustrialGrade|工业级",
     "MilSpec|军规级",
@@ -30,6 +31,7 @@
     "ContrabandItems|违禁品"
   ],
   "Rarity": [
+    "NoRarity|无",
     "Common|普通",
     "Rare|高级",
     "Legendary|奇异",
