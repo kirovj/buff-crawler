@@ -44,7 +44,7 @@ impl Crawler {
         }).collect::<Vec<(&str, &str)>>();
 
         for (name, name_zh) in items {
-            println!("start crawl {}|{}", name, name_zh);
+            println!("start crawl {}", name_zh);
             let mut page: u8 = 1;
             loop {
                 match request(self.build_url(name, page).as_str()) {
@@ -52,32 +52,41 @@ impl Crawler {
                         Ok(v) => if page > self.process(v) {
                             break;
                         },
-                        _ => break,
+                        _ => {
+                            println!("read json failed!");
+                            break;
+                        }
                     },
-                    _ => break,
+                    _ => {
+                        println!("request failed!");
+                        break;
+                    }
                 };
                 thread::sleep(time::Duration::from_secs(3));
                 page += 1;
             }
-            break;
         }
         Ok(())
     }
 
     fn process(&self, value: &Value) -> u8 {
         let data = &value["data"];
-        match &data["total_page"].as_u64() {
+        let total_page = match &data["total_page"].as_u64() {
             Some(p) => {
                 match &data["items"].as_array() {
                     Some(items) => {
-                        items.into_iter().map(|item| self.process_item(item));
+                        for item in *items {
+                            self.process_item(item);
+                        }
                     }
                     _ => {}
                 }
                 *p as u8
             }
             _ => 0
-        }
+        };
+        println!("total page: {}", total_page);
+        total_page
     }
 
     fn get_value(&self, value: &Value, key: &str) -> String {
@@ -85,7 +94,7 @@ impl Crawler {
     }
 
     fn process_item(&self, value: &Value) {
-        let name = *&value["short_name"].as_str().unwrap();
+        let name = &value["short_name"].as_str().unwrap();
         let info = &value["goods_info"]["info"]["tags"];
         let ware = self.get_value(info, "exterior");
         let quality = self.get_value(info, "quality");
@@ -93,13 +102,18 @@ impl Crawler {
         let class = self.get_value(info, "type");
         let typo = self.get_value(info, "weapon");
         let stat_trak = quality.contains("StatTrak");
+        print!("process item {}: ", name);
         let item = Item::new(name.to_string(), class, typo, ware, quality, rarity, stat_trak);
         match self.db_helper.get_item_id(&item) {
             None => {}
             Some(id) => {
                 let date = Local::now().format("%Y-%m-%d").to_string();
-                let price = &value["sell_min_price"].as_f64().unwrap();
-                self.db_helper.add_price_info(&PriceInfo::new(id, date, *price as f32));
+                let price = &value["sell_min_price"].as_str().unwrap();
+                println!("get price {} at {}", price, date);
+                match price.parse::<f32>() {
+                    Ok(p) => self.db_helper.add_price_info(&PriceInfo::new(id, date, p.round() as usize)),
+                    _ => println!("parse price {} err", price)
+                }
             }
         };
     }
@@ -110,6 +124,7 @@ impl Crawler {
         api.push_str(page.to_string().as_str());
         api.push_str("&category=");
         api.push_str(category);
+        println!("build url {}", api);
         api
     }
 }

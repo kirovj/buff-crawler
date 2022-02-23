@@ -62,6 +62,8 @@ impl DbHelper {
         );
     }
 
+    // todo select price info
+
     pub fn add_price_info(&self, price_info: &PriceInfo) {
         self.conn.execute(
             "INSERT INTO PriceInfo (item_id, date, price) VALUES(?1, ?2, ?3);",
@@ -101,7 +103,7 @@ mod tests {
             id      INTEGER PRIMARY KEY AUTOINCREMENT,
             item_id INTEGER NOT NULL,
             date    TEXT NOT NULL,
-            price   REAL NOT NULL
+            price   INTEGER NOT NULL
         )",
             [],
         );
