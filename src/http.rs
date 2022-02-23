@@ -35,14 +35,12 @@ fn make_headers() -> HeaderMap {
     map
 }
 
-pub async fn request(url: &str) -> Result<serde_json::Value, reqwest::Error> {
-    let client = reqwest::Client::builder()
+pub fn request(url: &str) -> Result<String, reqwest::Error> {
+    let client = reqwest::blocking::Client::builder()
         .default_headers(make_headers())
         .proxy(PROXY_PROVIDER.random())
         .build()?;
-
-    let result: serde_json::Value = client.get(url).send().await?.json().await?;
-    Ok(result)
+    client.get(url).send()?.text()
 }
 
 #[cfg(test)]

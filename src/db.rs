@@ -1,35 +1,8 @@
 use std::collections::HashMap;
-use std::fs;
-use rusqlite::{Connection, params, Result, Row};
+use rusqlite::{Connection, params, Result};
 use crate::constant::DB_FILE;
-use crate::item::{Item, Type};
+use crate::item::Item;
 use crate::PriceInfo;
-
-fn create_db() -> Result<(), rusqlite::Error> {
-    let conn = Connection::open(DB_FILE)?;
-    let _ = conn.execute(
-        "create table Item (
-            id        INTEGER PRIMARY KEY AUTOINCREMENT,
-            name      TEXT NOT NULL,
-            item_type TEXT NOT NULL,
-            ware_type TEXT NOT NULL,
-            quality   TEXT,
-            rarity    TEXT,
-            stat_trak INTEGER NOT NULL
-        )",
-        [],
-    );
-    let _ = conn.execute(
-        "create table PriceInfo (
-            id      INTEGER PRIMARY KEY AUTOINCREMENT,
-            item_id INTEGER NOT NULL,
-            date    TEXT NOT NULL,
-            price   REAL NOT NULL
-        )",
-        [],
-    );
-    Ok(())
-}
 
 fn load_db() -> Result<Connection, rusqlite::Error> {
     let conn = Connection::open(DB_FILE)?;
@@ -51,11 +24,12 @@ impl DbHelper {
 
     fn add_item(&self, item: Item) {
         self.conn.execute(
-            "INSERT INTO Item (name, item_type, ware_type, quality, rarity, stat_trak) VALUES(?1, ?2, ?3, ?4, ?5, ?6);",
+            "INSERT INTO Item (name, class, typo, ware, quality, rarity, stat_trak) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7);",
             params![
                 item.name,
-                item.item_type,
-                item.ware_type,
+                item.class,
+                item.typo,
+                item.ware,
                 item.quality,
                 item.rarity,
                 item.stat_trak
@@ -77,12 +51,41 @@ impl DbHelper {
 
 #[cfg(test)]
 mod tests {
+    use rusqlite::Connection;
+    use crate::constant::DB_FILE;
     use crate::db::DbHelper;
     use crate::item::*;
 
+    fn create_db() -> Result<(), rusqlite::Error> {
+        let conn = Connection::open(DB_FILE)?;
+        let _ = conn.execute(
+            "create table Item (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            name      TEXT NOT NULL,
+            class     TEXT NOT NULL,
+            typo      TEXT NOT NULL,
+            ware      TEXT NOT NULL,
+            quality   TEXT,
+            rarity    TEXT,
+            stat_trak INTEGER NOT NULL
+        )",
+            [],
+        );
+        let _ = conn.execute(
+            "create table PriceInfo (
+            id      INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_id INTEGER NOT NULL,
+            date    TEXT NOT NULL,
+            price   REAL NOT NULL
+        )",
+            [],
+        );
+        Ok(())
+    }
+
     #[test]
     fn test_create_db() {
-        assert!(super::create_db().is_ok());
+        assert!(create_db().is_ok());
     }
 
     #[test]
@@ -90,9 +93,10 @@ mod tests {
         let db_helper = DbHelper::default();
         let item = Item {
             id: 0,
-            name: "蝴蝶刀".to_string(),
-            item_type: "刀".to_string(),
-            ware_type: "久经沙场".to_string(),
+            name: "蝴蝶刀（★） | 人工染色 (崭新出厂)".to_string(),
+            class: "刀".to_string(),
+            typo: "蝴蝶刀".to_string(),
+            ware: "久经沙场".to_string(),
             quality: "★".to_string(),
             rarity: "隐秘".to_string(),
             stat_trak: false,

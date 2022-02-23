@@ -1,5 +1,5 @@
 {
-  "item_types": [
+  "Class": [
     "Knife|刀",
     "Pistol|手枪",
     "Rifle|步枪",
@@ -11,7 +11,7 @@
     "Agent|探员",
     "Other|其他"
   ],
-  "wear_types": [
+  "Wear": [
     "NoWare|无磨损",
     "FactoryNew|崭新出产",
     "MinimalWare|略有磨损",
@@ -19,7 +19,7 @@
     "WellWorn|破损不堪",
     "BattleScarred|战痕累累"
   ],
-  "qualities": [
+  "Quality": [
     "ConsumerGrade|消费级",
     "IndustrialGrade|工业级",
     "MilSpec|军规级",
@@ -29,7 +29,7 @@
     "Unusual|★",
     "ContrabandItems|违禁品"
   ],
-  "rarities": [
+  "Rarity": [
     "Common|普通",
     "Rare|高级",
     "Legendary|奇异",

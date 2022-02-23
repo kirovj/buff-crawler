@@ -1,36 +1,46 @@
 use std::collections::HashMap;
 use std::fs;
-use crate::constant::BASE_DATA_FILE;
 
-pub struct Categories {
-    item_types: HashMap<String, Type>,
-    ware_types: HashMap<String, Type>,
+pub struct Category {
+    classes: HashMap<String, Type>,
+    wares: HashMap<String, Type>,
     qualities: HashMap<String, Type>,
     rarities: HashMap<String, Type>,
 }
 
-enum Category {
-    Item,
+enum CategoryType {
+    Class,
     Wear,
     Quality,
     Rarity,
 }
 
-impl Categories {
-    pub fn from_json(path: &str) -> Categories {
+impl CategoryType {
+    fn value(&self) -> &str {
+        match self {
+            CategoryType::Class => "Class",
+            CategoryType::Wear => "Wear",
+            CategoryType::Quality => "Quality",
+            CategoryType::Rarity => "Rarity",
+        }
+    }
+}
+
+impl Category {
+    pub fn from_json(path: &str) -> Category {
         let json = fs::read_to_string(path).unwrap();
         let value: serde_json::Value = serde_json::from_str(json.as_str()).unwrap();
-        Categories {
-            item_types: Categories::make_map("item_types", &value),
-            ware_types: Categories::make_map("ware_types", &value),
-            qualities: Categories::make_map("qualities", &value),
-            rarities: Categories::make_map("rarities", &value),
+        Category {
+            classes: Category::make_map(CategoryType::Class, &value),
+            wares: Category::make_map(CategoryType::Wear, &value),
+            qualities: Category::make_map(CategoryType::Quality, &value),
+            rarities: Category::make_map(CategoryType::Rarity, &value),
         }
     }
 
-    fn make_map(map_name: &str, value: &serde_json::Value) -> HashMap<String, Type> {
+    fn make_map(category_type: CategoryType, value: &serde_json::Value) -> HashMap<String, Type> {
         let mut map = HashMap::new();
-        let items = &value[map_name].as_array().unwrap();
+        let items = &value[category_type.value()].as_array().unwrap();
         for item in items.into_iter() {
             let text = item.to_string();
             let mut splits = text.split("|");
@@ -41,12 +51,12 @@ impl Categories {
         map
     }
 
-    pub fn get_type(&self, category: Category, key: String) -> Option<&Type> {
-        match category {
-            Category::Item => self.item_types.get(&key),
-            Category::Wear => self.ware_types.get(&key),
-            Category::Quality => self.qualities.get(&key),
-            Category::Rarity => self.rarities.get(&key),
+    pub fn get_type(&self, category_type: CategoryType, key: String) -> Option<&Type> {
+        match category_type {
+            CategoryType::Class => self.classes.get(&key),
+            CategoryType::Wear => self.wares.get(&key),
+            CategoryType::Quality => self.qualities.get(&key),
+            CategoryType::Rarity => self.rarities.get(&key),
         }
     }
 }
@@ -60,8 +70,9 @@ pub struct Type {
 pub struct Item {
     pub id: u32,
     pub name: String,
-    pub item_type: String,
-    pub ware_type: String,
+    pub class: String,
+    pub typo: String,
+    pub ware: String,
     pub quality: String,
     pub rarity: String,
     pub stat_trak: bool,
