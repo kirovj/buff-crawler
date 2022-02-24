@@ -49,7 +49,7 @@ impl DbHelper {
         self.conn.execute(
             "INSERT INTO Item \
             (name, class, typo, ware, quality, rarity, stat_trak) \
-            VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7);",
+            VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             params![
                 item.name,
                 item.class,
@@ -62,17 +62,30 @@ impl DbHelper {
         );
     }
 
-    // todo select price info
+    pub fn find_price_info_id(&self, price_info: &PriceInfo) -> Result<usize> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id from PriceInfo where item_id = ?1 and date = ?2"
+        ).unwrap();
+        stmt.query_row(
+            params![price_info.item_id, price_info.date],
+            |row| row.get(0),
+        )
+    }
 
     pub fn add_price_info(&self, price_info: &PriceInfo) {
-        self.conn.execute(
-            "INSERT INTO PriceInfo (item_id, date, price) VALUES(?1, ?2, ?3);",
-            params![
-                price_info.item_id,
-                price_info.date,
-                price_info.price,
-            ],
-        );
+        match self.find_price_info_id(price_info) {
+            Ok(_) => {}
+            _ => {
+                self.conn.execute(
+                    "INSERT INTO PriceInfo (item_id, date, price) VALUES(?1, ?2, ?3)",
+                    params![
+                        price_info.item_id,
+                        price_info.date,
+                        price_info.price,
+                    ],
+                );
+            }
+        }
     }
 }
 
