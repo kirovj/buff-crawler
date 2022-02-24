@@ -74,7 +74,6 @@ impl Crawler {
     }
 
     fn run_without_login(&self) {
-        let mut rng = rand::thread_rng();
         loop {
             let mut url = String::from(API_OPEN);
             url.push_str(Local::now().timestamp_millis().to_string().as_str());
@@ -91,7 +90,7 @@ impl Crawler {
                     break;
                 }
             };
-            thread::sleep(time::Duration::from_secs(rng.gen_range(2)));
+            thread::sleep(time::Duration::from_secs(2));
         }
     }
 
