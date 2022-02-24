@@ -15,6 +15,7 @@ use std::error::Error;
 use std::fs;
 use std::{thread, time};
 use chrono::Local;
+use rand::Rng;
 use regex::Regex;
 use crate::constant::{API, DEFAULT};
 use crate::http::request;
@@ -44,7 +45,10 @@ impl Crawler {
         }).collect::<Vec<(&str, &str)>>();
 
         for (name, name_zh) in items {
-            println!("start crawl {}", name_zh);
+            if !name.to_string().starts_with("weapon") {
+                continue;
+            }
+            println!("start crawl {}  |  {}", name, name_zh);
             let mut page: u8 = 1;
             loop {
                 match request(self.build_url(name, page).as_str()) {
@@ -62,7 +66,7 @@ impl Crawler {
                         break;
                     }
                 };
-                thread::sleep(time::Duration::from_secs(3));
+                thread::sleep(time::Duration::from_secs(rand::thread_rng().gen_range(2..5)));
                 page += 1;
             }
         }

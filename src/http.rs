@@ -35,12 +35,24 @@ fn make_headers() -> HeaderMap {
     map
 }
 
-pub fn request(url: &str) -> Result<String, reqwest::Error> {
+fn request_retry(url: &str) -> Result<String, reqwest::Error> {
     let client = reqwest::blocking::Client::builder()
         .default_headers(make_headers())
         .proxy(PROXY_PROVIDER.random())
         .build()?;
     client.get(url).send()?.text()
+}
+
+pub fn request(url: &str) -> Result<String, reqwest::Error> {
+    let mut times = 1;
+    loop {
+        let r = request_retry(url);
+        if !r.is_ok() && times < 3 {
+            times += 1;
+            continue;
+        }
+        break r;
+    }
 }
 
 #[cfg(test)]
