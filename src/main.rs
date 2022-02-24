@@ -91,7 +91,7 @@ impl Crawler {
                     break;
                 }
             };
-            thread::sleep(time::Duration::from_secs(rng.gen_range(2..5)));
+            thread::sleep(time::Duration::from_secs(rng.gen_range(6..10)));
         }
     }
 
