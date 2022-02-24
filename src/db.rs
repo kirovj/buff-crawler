@@ -74,7 +74,12 @@ impl DbHelper {
 
     pub fn add_price_info(&self, price_info: &PriceInfo) {
         match self.find_price_info_id(price_info) {
-            Ok(_) => {}
+            Ok(id) => {
+                self.conn.execute(
+                    "update PriceInfo set price = ?1 where id = ?2",
+                    params![price_info.price, id],
+                );
+            }
             _ => {
                 self.conn.execute(
                     "INSERT INTO PriceInfo (item_id, date, price) VALUES(?1, ?2, ?3)",
