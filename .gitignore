@@ -1,5 +1,6 @@
 /target
 *.txt
-proxies.json
+*.json
 *.db
+*.exe
 .idea
