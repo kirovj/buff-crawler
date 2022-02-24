@@ -74,7 +74,6 @@ impl Crawler {
     }
 
     fn run_without_login(&self) {
-        let mut rng = rand::thread_rng();
         loop {
             let mut url = String::from(API_OPEN);
             url.push_str(Local::now().timestamp_millis().to_string().as_str());
@@ -82,7 +81,7 @@ impl Crawler {
                 Ok(r) => match &serde_json::from_str(r.as_str()) {
                     Ok(v) => self.process(v),
                     _ => {
-                        println!("read json failed!");
+                        println!("read json failed!\n{}", r);
                         break;
                     }
                 },
@@ -91,7 +90,7 @@ impl Crawler {
                     break;
                 }
             };
-            thread::sleep(time::Duration::from_secs(rng.gen_range(6..10)));
+            thread::sleep(time::Duration::from_secs(2));
         }
     }
 
