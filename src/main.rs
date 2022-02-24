@@ -17,7 +17,7 @@ use std::{thread, time};
 use chrono::Local;
 use rand::Rng;
 use regex::Regex;
-use crate::constant::{API, DEFAULT};
+use crate::constant::{API, API_OPEN, DEFAULT};
 use crate::http::request;
 use crate::item::Item;
 use crate::db::DbHelper;
@@ -73,6 +73,28 @@ impl Crawler {
         Ok(())
     }
 
+    fn run_without_login(&self) {
+        let mut rng = rand::thread_rng();
+        loop {
+            let mut url = String::from(API_OPEN);
+            url.push_str(Local::now().timestamp_millis().to_string().as_str());
+            match request(url.as_str()) {
+                Ok(r) => match &serde_json::from_str(r.as_str()) {
+                    Ok(v) => self.process(v),
+                    _ => {
+                        println!("read json failed!");
+                        break;
+                    }
+                },
+                _ => {
+                    println!("request failed!");
+                    break;
+                }
+            };
+            thread::sleep(time::Duration::from_secs(rng.gen_range(2..5)));
+        }
+    }
+
     fn process(&self, value: &Value) -> u8 {
         let data = &value["data"];
         let total_page = match &data["total_page"].as_u64() {
@@ -89,7 +111,6 @@ impl Crawler {
             }
             _ => 0
         };
-        println!("total page: {}", total_page);
         total_page
     }
 
@@ -135,6 +156,6 @@ impl Crawler {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let crawler = Crawler::new(DB_FILE);
-    crawler.run();
+    crawler.run_without_login();
     Ok(())
 }
