@@ -25,7 +25,7 @@ impl ProxyProvider {
 lazy_static! {
     static ref PROXY_PROVIDER: ProxyProvider =
         serde_json::from_str(fs::read_to_string(PROXY_FILE).unwrap().as_str()).unwrap();
-    static ref COOKIE: String = fs::read_to_string(COOKIE_FILE).unwrap();
+    // static ref COOKIE: String = fs::read_to_string(COOKIE_FILE).unwrap();
 }
 
 fn make_headers() -> HeaderMap {
