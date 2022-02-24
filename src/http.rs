@@ -30,7 +30,7 @@ lazy_static! {
 
 fn make_headers() -> HeaderMap {
     let mut map = HeaderMap::new();
-    map.insert("cookie", HeaderValue::from_static(COOKIE.as_str()));
+    // map.insert("cookie", HeaderValue::from_static(COOKIE.as_str()));
     map.insert("user-agent", HeaderValue::from_static(UA));
     map
 }
