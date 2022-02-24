@@ -81,7 +81,7 @@ impl Crawler {
                 Ok(r) => match &serde_json::from_str(r.as_str()) {
                     Ok(v) => self.process(v),
                     _ => {
-                        println!("read json failed!");
+                        println!("read json failed!\n{}", r);
                         break;
                     }
                 },
