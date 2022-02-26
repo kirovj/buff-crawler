@@ -8,7 +8,78 @@ use rand::Rng;
 use regex::Regex;
 use serde_json::Value;
 use std::error::Error;
+use std::fmt::Result;
 use std::{thread, time};
+
+trait Crawl {
+    fn db(&self) -> DbHelper;
+
+    fn build_url(&self) -> String;
+
+    fn fetch(&self) -> Result<String, reqwest::Error> {
+        request(self.build_url().as_str())
+    }
+
+    fn parse(&self, html: String) -> Result<(Item, usize), Box<dyn Error>>;
+
+    fn run(&self);
+
+    fn persistent(&self, item: Item, price: usize) -> Result<(), Box<dyn Error>> {
+        match self.db().get_item_id(&item) {
+            None => {}
+            Some(id) => {
+                let date = Local::now().format("%Y-%m-%d").to_string();
+                self.db().add_price_info(&PriceInfo::new(id, date, price));
+            }
+        };
+        Ok(())
+    }
+}
+
+enum Target {
+    Buff,
+    Yyyp,
+    Igxe,
+}
+
+pub fn build_crawler(target: Target, db_file: &str) -> dyn Crawl {
+    let db_helper = DbHelper::new(db_file);
+    match target {
+        Target::Buff => BuffCrawler { db_helper },
+        Target::Yyyp => YyypCrawler { db_helper },
+        Target::Igxe => IgxeCrawler { db_helper },
+    }
+}
+
+pub struct BuffCrawler {
+    db_helper: DbHelper,
+}
+
+pub struct YyypCrawler {
+    db_helper: DbHelper,
+}
+
+pub struct IgxeCrawler {
+    db_helper: DbHelper,
+}
+
+impl Crawl for BuffCrawler {
+    fn db(&self) -> DbHelper {
+        self.db_helper
+    }
+}
+
+impl Crawl for YyypCrawler {
+    fn db(&self) -> DbHelper {
+        self.db_helper
+    }
+}
+
+impl Crawl for IgxeCrawler {
+    fn db(&self) -> DbHelper {
+        self.db_helper
+    }
+}
 
 pub struct Crawler {
     db_helper: DbHelper,
