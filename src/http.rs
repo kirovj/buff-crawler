@@ -2,8 +2,8 @@ use rand::Rng;
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 
+use crate::constant::{PROXY_FILE, UA};
 use std::fs;
-use crate::constant::{PROXY_FILE, COOKIE_FILE, UA};
 
 #[derive(Serialize, Deserialize)]
 struct ProxyProvider {
@@ -25,7 +25,6 @@ impl ProxyProvider {
 lazy_static! {
     static ref PROXY_PROVIDER: ProxyProvider =
         serde_json::from_str(fs::read_to_string(PROXY_FILE).unwrap().as_str()).unwrap();
-    // static ref COOKIE: String = fs::read_to_string(COOKIE_FILE).unwrap();
 }
 
 fn make_headers() -> HeaderMap {

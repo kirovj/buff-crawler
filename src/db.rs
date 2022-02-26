@@ -1,13 +1,11 @@
-use std::collections::HashMap;
-use rusqlite::{Connection, params, Result};
-use crate::constant::DB_FILE;
 use crate::item::{Item, PriceInfo};
-
+use rusqlite::{params, Connection, Result};
 
 pub struct DbHelper {
     conn: Connection,
 }
 
+#[allow(unused)]
 impl DbHelper {
     pub fn new(db_file: &str) -> DbHelper {
         let conn = Connection::open(db_file).unwrap();
@@ -15,18 +13,29 @@ impl DbHelper {
     }
 
     fn find_item_id(&self, item: &Item) -> Result<u32> {
-        let mut stmt = self.conn.prepare(
-            "SELECT id from Item \
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT id from Item \
             where name = ?1 \
             and class = ?2 \
             and typo = ?3 \
             and ware = ?4 \
             and quality = ?5 \
             and rarity = ?6 \
-            and stat_trak = ?7"
-        ).unwrap();
+            and stat_trak = ?7",
+            )
+            .unwrap();
         stmt.query_row(
-            params![item.name, item.class, item.typo, item.ware, item.quality, item.rarity, item.stat_trak],
+            params![
+                item.name,
+                item.class,
+                item.typo,
+                item.ware,
+                item.quality,
+                item.rarity,
+                item.stat_trak
+            ],
             |row| row.get(0),
         )
     }
@@ -38,7 +47,7 @@ impl DbHelper {
                 self.add_item(item);
                 match self.find_item_id(item) {
                     Ok(_id) => Some(_id),
-                    _ => None
+                    _ => None,
                 }
             }
         }
@@ -62,13 +71,13 @@ impl DbHelper {
     }
 
     pub fn find_price_info_id(&self, price_info: &PriceInfo) -> Result<usize> {
-        let mut stmt = self.conn.prepare(
-            "SELECT id from PriceInfo where item_id = ?1 and date = ?2"
-        ).unwrap();
-        stmt.query_row(
-            params![price_info.item_id, price_info.date],
-            |row| row.get(0),
-        )
+        let mut stmt = self
+            .conn
+            .prepare("SELECT id from PriceInfo where item_id = ?1 and date = ?2")
+            .unwrap();
+        stmt.query_row(params![price_info.item_id, price_info.date], |row| {
+            row.get(0)
+        })
     }
 
     pub fn add_price_info(&self, price_info: &PriceInfo) {
@@ -82,11 +91,7 @@ impl DbHelper {
             _ => {
                 self.conn.execute(
                     "INSERT INTO PriceInfo (item_id, date, price) VALUES(?1, ?2, ?3)",
-                    params![
-                        price_info.item_id,
-                        price_info.date,
-                        price_info.price,
-                    ],
+                    params![price_info.item_id, price_info.date, price_info.price,],
                 );
             }
         }
@@ -95,10 +100,10 @@ impl DbHelper {
 
 #[cfg(test)]
 mod tests {
-    use rusqlite::Connection;
-    use crate::constant::DB_FILE;
     use super::DbHelper;
+    use crate::constant::DB_FILE;
     use crate::item::*;
+    use rusqlite::Connection;
 
     fn create_db() -> Result<(), rusqlite::Error> {
         let conn = Connection::open(DB_FILE)?;

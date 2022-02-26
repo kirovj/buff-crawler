@@ -1,20 +1,20 @@
+use crate::constant::{API, API_OPEN, DEFAULT};
 use crate::db::DbHelper;
 use crate::http::request;
-use crate::constant::{API, API_OPEN, DEFAULT};
 use crate::item::{Item, PriceInfo};
 
-use std::error::Error;
-use std::{thread, time};
 use chrono::Local;
 use rand::Rng;
-use serde_json::Value;
 use regex::Regex;
-
+use serde_json::Value;
+use std::error::Error;
+use std::{thread, time};
 
 pub struct Crawler {
     db_helper: DbHelper,
 }
 
+#[allow(unused)]
 impl Crawler {
     pub fn new(db_file: &str) -> Crawler {
         let db_helper = DbHelper::new(db_file);
@@ -26,12 +26,13 @@ impl Crawler {
 
         let html = request(url_entrance)?;
         let re = Regex::new("<li value=\"([^\"]+)\">([^<]*)</li>")?;
-        let items = re.captures_iter(html.as_str()).filter_map(|cap| {
-            match (cap.get(1), cap.get(2)) {
+        let items = re
+            .captures_iter(html.as_str())
+            .filter_map(|cap| match (cap.get(1), cap.get(2)) {
                 (Some(name), Some(name_zh)) => Some((name.as_str(), name_zh.as_str())),
                 _ => None,
-            }
-        }).collect::<Vec<(&str, &str)>>();
+            })
+            .collect::<Vec<(&str, &str)>>();
 
         for (name, name_zh) in items {
             if !name.to_string().starts_with("weapon") {
@@ -42,9 +43,11 @@ impl Crawler {
             loop {
                 match request(self.build_url(name, page).as_str()) {
                     Ok(r) => match &serde_json::from_str(r.as_str()) {
-                        Ok(v) => if page > self.process(v) {
-                            break;
-                        },
+                        Ok(v) => {
+                            if page > self.process(v) {
+                                break;
+                            }
+                        }
                         _ => {
                             println!("read json failed!");
                             break;
@@ -55,7 +58,9 @@ impl Crawler {
                         break;
                     }
                 };
-                thread::sleep(time::Duration::from_secs(rand::thread_rng().gen_range(5..10)));
+                thread::sleep(time::Duration::from_secs(
+                    rand::thread_rng().gen_range(5..10),
+                ));
                 page += 1;
             }
         }
@@ -97,13 +102,16 @@ impl Crawler {
                 }
                 *p as u8
             }
-            _ => 0
+            _ => 0,
         };
         total_page
     }
 
     fn get_value(&self, value: &Value, key: &str) -> String {
-        value[key]["localized_name"].as_str().unwrap_or(DEFAULT).to_string()
+        value[key]["localized_name"]
+            .as_str()
+            .unwrap_or(DEFAULT)
+            .to_string()
     }
 
     fn process_item(&self, value: &Value) {
@@ -116,7 +124,15 @@ impl Crawler {
         let typo = self.get_value(info, "weapon");
         let stat_trak = quality.contains("StatTrak");
         print!("process item {}: ", name);
-        let item = Item::new(name.to_string(), class, typo, ware, quality, rarity, stat_trak);
+        let item = Item::new(
+            name.to_string(),
+            class,
+            typo,
+            ware,
+            quality,
+            rarity,
+            stat_trak,
+        );
         match self.db_helper.get_item_id(&item) {
             None => {}
             Some(id) => {
@@ -124,8 +140,11 @@ impl Crawler {
                 let price = &value["sell_min_price"].as_str().unwrap();
                 println!("get price {} at {}", price, date);
                 match price.parse::<f32>() {
-                    Ok(p) => self.db_helper.add_price_info(&PriceInfo::new(id, date, p.round() as usize)),
-                    _ => println!("parse price {} err", price)
+                    Ok(p) => {
+                        self.db_helper
+                            .add_price_info(&PriceInfo::new(id, date, p.round() as usize))
+                    }
+                    _ => println!("parse price {} err", price),
                 }
             }
         };
