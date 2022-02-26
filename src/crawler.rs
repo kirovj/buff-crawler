@@ -82,11 +82,11 @@ impl Crawl for BuffCrawler {
         let value: Value = serde_json::from_str(html.as_str()).unwrap();
         let data = &value["data"];
         match data["items"].as_array() {
-            Some(items) => {
-                for item in items {
-                    let info = &item["goods_info"]["info"]["tags"];
+            Some(data_items) => {
+                for data_item in data_items {
+                    let info = &data_item["goods_info"]["info"]["tags"];
                     let item = Item::new(
-                        value["short_name"].as_str().unwrap().to_string(),
+                        data_item["short_name"].as_str().unwrap().to_string(),
                         get_value(info, "type"),
                         get_value(info, "weapon"),
                         get_value(info, "exterior"),
@@ -94,8 +94,8 @@ impl Crawl for BuffCrawler {
                         get_value(info, "rarity"),
                         get_value(info, "quality").contains("StatTrak"),
                     );
-                    if let Some(price) = &value["sell_min_price"].as_str() {
-                        println!("process item {} get price {}", item.name, price);
+                    if let Some(price) = &data_item["sell_min_price"].as_str() {
+                        println!("process {} get price {}", item.name, price);
                         match price.parse::<f32>() {
                             Ok(p) => self.persistent(item, p.round() as usize),
                             _ => println!("parse price {} err", price),
