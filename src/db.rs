@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use rusqlite::{Connection, params, Result};
 use crate::constant::DB_FILE;
-use crate::item::Item;
-use crate::PriceInfo;
+use crate::item::{Item, PriceInfo};
 
 
 pub struct DbHelper {
