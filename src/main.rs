@@ -14,6 +14,7 @@ use crawler::Crawler;
 use clap::{crate_version, App, Arg};
 
 fn main() {
+    println!("start");
     // let help_desc = r#"aaaaaaaaa"#;
     let matches = App::new("CS:GO item price crawler")
         .version(crate_version!())
@@ -24,7 +25,7 @@ fn main() {
                 .short("t")
                 .long("target")
                 .help("crawl target")
-                .required(true)
+                // .required(true)
                 .takes_value(true),
         )
         .arg(
