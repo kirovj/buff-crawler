@@ -8,8 +8,8 @@ mod db;
 mod http;
 mod item;
 
-use constant::DB_FILE;
-use crawler::Crawler;
+use crate::constant::DB_FILE;
+use crate::crawler::{build_crawler, Target};
 
 use clap::{crate_version, App, Arg};
 
@@ -36,6 +36,6 @@ fn main() {
                 .takes_value(false),
         )
         .get_matches();
-    let crawler = Crawler::new(DB_FILE);
-    crawler.run_without_login();
+    let crawler = build_crawler(Target::Buff, DB_FILE);
+    crawler.run();
 }
