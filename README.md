@@ -1,4 +1,4 @@
-# buff-crawler
+# csgo-crawler
 Csgo item daily price info crawler
 
 # LICENSE
