@@ -34,18 +34,13 @@ pub trait Crawl {
     }
 }
 
-pub enum Target {
-    Buff,
-    Yyyp,
-    Igxe,
-}
-
-pub fn build_crawler(target: Target, db_file: &str) -> Box<dyn Crawl> {
+pub fn build_crawler(target: &str, db_file: &str) -> Option<Box<dyn Crawl>> {
     let db_helper = DbHelper::new(db_file);
     match target {
-        Target::Buff => Box::new(BuffCrawler { db_helper }),
-        Target::Yyyp => Box::new(YyypCrawler { db_helper }),
-        Target::Igxe => Box::new(IgxeCrawler { db_helper }),
+        "buff" => Some(Box::new(BuffCrawler { db_helper })),
+        "yyyp" => Some(Box::new(YyypCrawler { db_helper })),
+        "igxe" => Some(Box::new(IgxeCrawler { db_helper })),
+        _ => None,
     }
 }
 
@@ -129,7 +124,7 @@ impl Crawl for YyypCrawler {
         todo!()
     }
 
-    fn parse(&self, html: String) {
+    fn parse(&self, _html: String) {
         todo!()
     }
 
@@ -147,7 +142,7 @@ impl Crawl for IgxeCrawler {
         todo!()
     }
 
-    fn parse(&self, html: String) {
+    fn parse(&self, _html: String) {
         todo!()
     }
 
