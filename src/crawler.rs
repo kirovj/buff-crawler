@@ -91,9 +91,11 @@ impl Crawl for BuffCrawler {
                         get_value(info, "quality").contains("StatTrak"),
                     );
                     if let Some(price) = &data_item["sell_min_price"].as_str() {
-                        println!("process {} get price {}", item.name, price);
                         match price.parse::<f32>() {
-                            Ok(p) => self.persistent(item, utils::round(p)),
+                            Ok(p) => {
+                                println!("process {} get price {}", item.name, p);
+                                self.persistent(item, utils::round(p));
+                            }
                             _ => println!("parse price {} err", price),
                         }
                     }

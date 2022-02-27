@@ -7,12 +7,12 @@ fn create_db(db_file: &str) -> Result<(), rusqlite::Error> {
     let _ = conn.execute(
         "create table Item (
         id        INTEGER PRIMARY KEY AUTOINCREMENT,
-        name      TEXT NOT NULL,
-        class     TEXT NOT NULL,
-        typo      TEXT NOT NULL,
-        ware      TEXT NOT NULL,
-        quality   TEXT NOT NULL,
-        rarity    TEXT NOT NULL,
+        name      VARCHAR NOT NULL,
+        class     CHAR(16) NOT NULL,
+        typo      CHAR(32) NOT NULL,
+        ware      CHAR(16) NOT NULL,
+        quality   CHAR(16) NOT NULL,
+        rarity    CHAR(16) NOT NULL,
         stat_trak INTEGER NOT NULL
     )",
         [],
@@ -21,8 +21,8 @@ fn create_db(db_file: &str) -> Result<(), rusqlite::Error> {
         "create table PriceInfo (
         id      INTEGER PRIMARY KEY AUTOINCREMENT,
         item_id INTEGER NOT NULL,
-        date    TEXT NOT NULL,
-        price   REAL NOT NULL
+        date    CHAR(16) NOT NULL,
+        price   NUMERIC(10,1) NOT NULL
     )",
         [],
     );
