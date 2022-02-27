@@ -1,5 +1,5 @@
 [package]
-name = "buff-crawler"
+name = "csgo-crawler"
 version = "0.1.4"
 authors = ["Kirovj <wuyitingtz3@gmail.com>"]
 edition = "2021"

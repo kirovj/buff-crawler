@@ -132,11 +132,10 @@ impl DbHelper {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constant::DB_FILE;
 
     #[test]
     fn test_create_db() {
-        assert!(create_db(DB_FILE).is_ok());
+        assert!(create_db("test.db").is_ok());
     }
 
     fn test_item() -> Item {
@@ -155,7 +154,7 @@ mod tests {
     #[test]
     fn test_add_item() {
         let item = test_item();
-        let db_helper = DbHelper::new(DB_FILE);
+        let db_helper = DbHelper::new("test.db");
         db_helper.add_item(&item);
         assert!(true)
     }
@@ -163,7 +162,7 @@ mod tests {
     #[test]
     fn test_get_item_id() {
         let item = test_item();
-        let db_helper = DbHelper::new(DB_FILE);
+        let db_helper = DbHelper::new("test.db");
         assert_eq!(Some(1), db_helper.get_item_id(&item));
     }
 }

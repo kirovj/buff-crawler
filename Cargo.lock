@@ -61,21 +61,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
-name = "buff-crawler"
-version = "0.1.4"
-dependencies = [
- "chrono",
- "clap",
- "lazy_static",
- "rand",
- "regex",
- "reqwest",
- "rusqlite",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -142,6 +127,21 @@ name = "core-foundation-sys"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5827cebf4670468b8772dd191856768aedcb1b0278a04f989f7766351917b9dc"
+
+[[package]]
+name = "csgo-crawler"
+version = "0.1.4"
+dependencies = [
+ "chrono",
+ "clap",
+ "lazy_static",
+ "rand",
+ "regex",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "encoding_rs"
