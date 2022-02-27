@@ -1,5 +1,33 @@
 use crate::item::{Item, PriceInfo};
 use rusqlite::{params, Connection, Result};
+use std::path::Path;
+
+fn create_db(db_file: &str) -> Result<(), rusqlite::Error> {
+    let conn = Connection::open(db_file)?;
+    let _ = conn.execute(
+        "create table Item (
+        id        INTEGER PRIMARY KEY AUTOINCREMENT,
+        name      TEXT NOT NULL,
+        class     TEXT NOT NULL,
+        typo      TEXT NOT NULL,
+        ware      TEXT NOT NULL,
+        quality   TEXT NOT NULL,
+        rarity    TEXT NOT NULL,
+        stat_trak INTEGER NOT NULL
+    )",
+        [],
+    );
+    let _ = conn.execute(
+        "create table PriceInfo (
+        id      INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id INTEGER NOT NULL,
+        date    TEXT NOT NULL,
+        price   REAL NOT NULL
+    )",
+        [],
+    );
+    Ok(())
+}
 
 pub struct DbHelper {
     conn: Connection,
@@ -8,6 +36,9 @@ pub struct DbHelper {
 #[allow(unused)]
 impl DbHelper {
     pub fn new(db_file: &str) -> DbHelper {
+        if !Path::new(db_file).exists() {
+            create_db(db_file);
+        }
         let conn = Connection::open(db_file).unwrap();
         DbHelper { conn }
     }
@@ -100,41 +131,12 @@ impl DbHelper {
 
 #[cfg(test)]
 mod tests {
-    use super::DbHelper;
+    use super::*;
     use crate::constant::DB_FILE;
-    use crate::item::*;
-    use rusqlite::Connection;
-
-    fn create_db() -> Result<(), rusqlite::Error> {
-        let conn = Connection::open(DB_FILE)?;
-        let _ = conn.execute(
-            "create table Item (
-            id        INTEGER PRIMARY KEY AUTOINCREMENT,
-            name      TEXT NOT NULL,
-            class     TEXT NOT NULL,
-            typo      TEXT NOT NULL,
-            ware      TEXT NOT NULL,
-            quality   TEXT NOT NULL,
-            rarity    TEXT NOT NULL,
-            stat_trak INTEGER NOT NULL
-        )",
-            [],
-        );
-        let _ = conn.execute(
-            "create table PriceInfo (
-            id      INTEGER PRIMARY KEY AUTOINCREMENT,
-            item_id INTEGER NOT NULL,
-            date    TEXT NOT NULL,
-            price   INTEGER NOT NULL
-        )",
-            [],
-        );
-        Ok(())
-    }
 
     #[test]
     fn test_create_db() {
-        assert!(create_db().is_ok());
+        assert!(create_db(DB_FILE).is_ok());
     }
 
     fn test_item() -> Item {

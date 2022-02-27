@@ -2,6 +2,7 @@ use crate::constant::{API_BUFF, DEFAULT};
 use crate::db::DbHelper;
 use crate::http::request;
 use crate::item::{Item, PriceInfo};
+use crate::utils;
 
 use chrono::Local;
 use serde_json::Value;
@@ -23,7 +24,7 @@ pub trait Crawl {
 
     fn run(&self);
 
-    fn persistent(&self, item: Item, price: usize) {
+    fn persistent(&self, item: Item, price: f32) {
         match self.db().get_item_id(&item) {
             None => {}
             Some(id) => {
@@ -92,7 +93,7 @@ impl Crawl for BuffCrawler {
                     if let Some(price) = &data_item["sell_min_price"].as_str() {
                         println!("process {} get price {}", item.name, price);
                         match price.parse::<f32>() {
-                            Ok(p) => self.persistent(item, p.round() as usize),
+                            Ok(p) => self.persistent(item, utils::round(p)),
                             _ => println!("parse price {} err", price),
                         }
                     }

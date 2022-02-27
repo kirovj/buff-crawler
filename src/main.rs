@@ -7,6 +7,7 @@ mod crawler;
 mod db;
 mod http;
 mod item;
+mod utils;
 
 use clap::{crate_version, App, Arg};
 
