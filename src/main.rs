@@ -13,7 +13,7 @@ use clap::{crate_version, App, Arg};
 
 fn main() {
     // let help_desc = r#"aaaaaaaaa"#;
-    let _ = App::new("CS:GO item price crawler")
+    let matches = App::new("CS:GO item price crawler")
         .version(crate_version!())
         .author("Kirovj. <wuyitingtz3@gmail.com>")
         .about("Please don't use it illegally, I don't take any responsibility.")
@@ -21,8 +21,8 @@ fn main() {
             Arg::with_name("target")
                 .short("t")
                 .long("target")
-                .help("crawl target")
-                // .required(true)
+                .help("crawl target: buff | yyyp | igxe")
+                .required(true)
                 .takes_value(true),
         )
         .arg(
@@ -40,8 +40,18 @@ fn main() {
                 .takes_value(false),
         )
         .get_matches();
-    match crawler::build_crawler("buff", constant::DB_FILE) {
+    let target = matches.value_of("target").unwrap();
+    let db_file = match matches.value_of("db") {
+        Some(name) => name.to_string(),
+        _ => {
+            let mut name = target.to_string();
+            name.push_str(".db");
+            name
+        }
+    };
+    // let use_proxy = matches.is_present("proxy");
+    match crawler::build_crawler(target, db_file.as_str()) {
         Some(crawler) => crawler.run(),
-        _ => println!("so such target"),
+        _ => println!("unknown target {}", target),
     }
 }
