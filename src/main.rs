@@ -7,16 +7,13 @@ mod crawler;
 mod db;
 mod http;
 mod item;
-
-use crate::constant::DB_FILE;
-use crate::crawler::{build_crawler, Target};
+mod utils;
 
 use clap::{crate_version, App, Arg};
 
 fn main() {
-    println!("start");
     // let help_desc = r#"aaaaaaaaa"#;
-    let matches = App::new("CS:GO item price crawler")
+    let _ = App::new("CS:GO item price crawler")
         .version(crate_version!())
         .author("Kirovj. <wuyitingtz3@gmail.com>")
         .about("Please don't use it illegally, I don't take any responsibility.")
@@ -29,6 +26,13 @@ fn main() {
                 .takes_value(true),
         )
         .arg(
+            Arg::with_name("db")
+                .short("d")
+                .long("database")
+                .help("database file name")
+                .takes_value(true),
+        )
+        .arg(
             Arg::with_name("proxy")
                 .short("p")
                 .long("proxy")
@@ -36,6 +40,8 @@ fn main() {
                 .takes_value(false),
         )
         .get_matches();
-    let crawler = build_crawler(Target::Buff, DB_FILE);
-    crawler.run();
+    match crawler::build_crawler("buff", constant::DB_FILE) {
+        Some(crawler) => crawler.run(),
+        _ => println!("so such target"),
+    }
 }

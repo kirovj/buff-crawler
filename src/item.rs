@@ -66,11 +66,11 @@ pub struct PriceInfo {
     pub id: usize,
     pub item_id: u32,
     pub date: String,
-    pub price: usize,
+    pub price: f32,
 }
 
 impl PriceInfo {
-    pub fn new(item_id: u32, date: String, price: usize) -> Self {
+    pub fn new(item_id: u32, date: String, price: f32) -> Self {
         PriceInfo {
             id: 0,
             item_id,

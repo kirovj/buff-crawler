@@ -2,6 +2,7 @@ use crate::constant::{API_BUFF, DEFAULT};
 use crate::db::DbHelper;
 use crate::http::request;
 use crate::item::{Item, PriceInfo};
+use crate::utils;
 
 use chrono::Local;
 use serde_json::Value;
@@ -23,7 +24,7 @@ pub trait Crawl {
 
     fn run(&self);
 
-    fn persistent(&self, item: Item, price: usize) {
+    fn persistent(&self, item: Item, price: f32) {
         match self.db().get_item_id(&item) {
             None => {}
             Some(id) => {
@@ -34,18 +35,13 @@ pub trait Crawl {
     }
 }
 
-pub enum Target {
-    Buff,
-    Yyyp,
-    Igxe,
-}
-
-pub fn build_crawler(target: Target, db_file: &str) -> Box<dyn Crawl> {
+pub fn build_crawler(target: &str, db_file: &str) -> Option<Box<dyn Crawl>> {
     let db_helper = DbHelper::new(db_file);
     match target {
-        Target::Buff => Box::new(BuffCrawler { db_helper }),
-        Target::Yyyp => Box::new(YyypCrawler { db_helper }),
-        Target::Igxe => Box::new(IgxeCrawler { db_helper }),
+        "buff" => Some(Box::new(BuffCrawler { db_helper })),
+        "yyyp" => Some(Box::new(YyypCrawler { db_helper })),
+        "igxe" => Some(Box::new(IgxeCrawler { db_helper })),
+        _ => None,
     }
 }
 
@@ -82,11 +78,11 @@ impl Crawl for BuffCrawler {
         let value: Value = serde_json::from_str(html.as_str()).unwrap();
         let data = &value["data"];
         match data["items"].as_array() {
-            Some(items) => {
-                for item in items {
-                    let info = &item["goods_info"]["info"]["tags"];
+            Some(data_items) => {
+                for data_item in data_items {
+                    let info = &data_item["goods_info"]["info"]["tags"];
                     let item = Item::new(
-                        value["short_name"].as_str().unwrap().to_string(),
+                        data_item["short_name"].as_str().unwrap().to_string(),
                         get_value(info, "type"),
                         get_value(info, "weapon"),
                         get_value(info, "exterior"),
@@ -94,10 +90,12 @@ impl Crawl for BuffCrawler {
                         get_value(info, "rarity"),
                         get_value(info, "quality").contains("StatTrak"),
                     );
-                    if let Some(price) = &value["sell_min_price"].as_str() {
-                        println!("process item {} get price {}", item.name, price);
+                    if let Some(price) = &data_item["sell_min_price"].as_str() {
                         match price.parse::<f32>() {
-                            Ok(p) => self.persistent(item, p.round() as usize),
+                            Ok(p) => {
+                                println!("process {} get price {}", item.name, p);
+                                self.persistent(item, utils::round(p));
+                            }
                             _ => println!("parse price {} err", price),
                         }
                     }
@@ -129,7 +127,7 @@ impl Crawl for YyypCrawler {
         todo!()
     }
 
-    fn parse(&self, html: String) {
+    fn parse(&self, _html: String) {
         todo!()
     }
 
@@ -147,7 +145,7 @@ impl Crawl for IgxeCrawler {
         todo!()
     }
 
-    fn parse(&self, html: String) {
+    fn parse(&self, _html: String) {
         todo!()
     }
 
