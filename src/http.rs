@@ -38,8 +38,6 @@ fn request_retry(url: &str) -> Result<String, reqwest::Error> {
     let client = reqwest::blocking::Client::builder()
         .default_headers(make_headers())
         .proxy(PROXY_PROVIDER.random())
-        .danger_accept_invalid_certs(true)
-        .danger_accept_invalid_hostnames(true)
         .build()?;
     client.get(url).send()?.text()
 }
