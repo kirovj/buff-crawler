@@ -91,6 +91,10 @@ impl Crawl for BuffCrawler {
                 let data = &value["data"];
                 match data["items"].as_array() {
                     Some(data_items) => {
+                        println!(
+                            "{}: get json items success",
+                            Local::now().format("%Y-%m-%d %H:%M:%S").to_string()
+                        );
                         for data_item in data_items {
                             let info = &data_item["goods_info"]["info"]["tags"];
                             let item = Item::new(
@@ -105,10 +109,13 @@ impl Crawl for BuffCrawler {
                             if let Some(price) = &data_item["sell_min_price"].as_str() {
                                 match price.parse::<f32>() {
                                     Ok(p) => {
-                                        println!("process {} get price {}", item.name, p);
                                         self.persistent(item, utils::round(p));
                                     }
-                                    _ => self.alert(format!("parse price {} err", price).as_str()),
+                                    _ => {
+                                        let message = format!("parse price {} err", price);
+                                        println!("{}", message);
+                                        self.alert(message.as_str())
+                                    }
                                 }
                             }
                         }
