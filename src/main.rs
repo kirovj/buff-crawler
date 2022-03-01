@@ -2,7 +2,6 @@
 extern crate lazy_static;
 extern crate clap;
 
-mod constant;
 mod crawler;
 mod db;
 mod http;
@@ -12,7 +11,6 @@ mod utils;
 use clap::{crate_version, App, Arg};
 
 fn main() {
-    // let help_desc = r#"aaaaaaaaa"#;
     let matches = App::new("CS:GO item price crawler")
         .version(crate_version!())
         .author("Kirovj. <wuyitingtz3@gmail.com>")

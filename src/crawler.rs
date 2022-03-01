@@ -1,10 +1,10 @@
-use crate::constant::{API_BUFF, DEFAULT};
 use crate::db::DbHelper;
 use crate::http::request;
 use crate::item::{Item, PriceInfo};
-use crate::utils;
+use crate::utils::{round, API_BUFF, DEFAULT};
 
 use chrono::Local;
+use rand::Rng;
 use serde_json::Value;
 use std::{thread, time};
 
@@ -94,7 +94,7 @@ impl Crawl for BuffCrawler {
                         match price.parse::<f32>() {
                             Ok(p) => {
                                 println!("process {} get price {}", item.name, p);
-                                self.persistent(item, utils::round(p));
+                                self.persistent(item, round(p));
                             }
                             _ => println!("parse price {} err", price),
                         }
@@ -113,7 +113,9 @@ impl Crawl for BuffCrawler {
                 }
                 _ => break,
             }
-            thread::sleep(time::Duration::from_secs(3));
+            thread::sleep(time::Duration::from_secs(
+                rand::thread_rng().gen_range(15..30),
+            ));
         }
     }
 }
