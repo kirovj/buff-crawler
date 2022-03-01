@@ -14,7 +14,7 @@ csgo item daily price info crawler
         -t, --target <target>    crawl target: buff | yyyp | igxe
 
 # LICENSE
-GPL-2.0
+    GPL-2.0
 
 # Warning
     Open source if you want to create your own version.
