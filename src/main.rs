@@ -13,7 +13,7 @@ use clap::{crate_version, App, Arg};
 fn main() {
     let matches = App::new("CS:GO item price crawler")
         .version(crate_version!())
-        .author("Kirovj. <wuyitingtz3@gmail.com>")
+        .author("Kirovj")
         .about("Please don't use it illegally, I don't take any responsibility.")
         .arg(
             Arg::with_name("target")
