@@ -6,7 +6,6 @@ csgo item daily price info crawler
 
     FLAGS:
         -h, --help       Prints help information
-        -p, --proxy      Use proxy or not
         -V, --version    Prints version information
 
     OPTIONS:
