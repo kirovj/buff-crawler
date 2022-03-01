@@ -29,7 +29,7 @@ fn main() {
             Arg::with_name("db")
                 .short("d")
                 .long("database")
-                .help("database file name")
+                .help("database file name default <target>.db")
                 .takes_value(true),
         )
         .arg(
