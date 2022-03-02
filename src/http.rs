@@ -46,5 +46,5 @@ pub fn get(url: &str) -> Result<String, reqwest::Error> {
 }
 
 pub fn post_json(url: &str, data: HashMap<String, String>) -> Result<String, reqwest::Error> {
-    request(url, Method::Get, Some(data))
+    request(url, Method::PostJson, Some(data))
 }
