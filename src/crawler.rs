@@ -1,5 +1,5 @@
 use crate::db::DbHelper;
-use crate::http::request;
+use crate::http;
 use crate::item::{Item, PriceInfo};
 use crate::utils;
 
@@ -20,7 +20,7 @@ pub trait Crawl {
     fn build_url(&self) -> String;
 
     fn fetch(&self) -> Option<String> {
-        match request(self.build_url().as_str()) {
+        match http::get(self.build_url().as_str()) {
             Ok(html) => Some(html),
             _ => None,
         }
