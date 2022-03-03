@@ -39,6 +39,12 @@ pub trait Crawl {
             }
         }
     }
+
+    fn sleep(&self) {
+        thread::sleep(time::Duration::from_secs(
+            rand::thread_rng().gen_range(15..30),
+        ));
+    }
 }
 
 pub fn build_crawler(target: &str, db_file: &str) -> Option<Box<dyn Crawl>> {
@@ -138,10 +144,44 @@ impl Crawl for BuffCrawler {
                     break;
                 }
             }
-            thread::sleep(time::Duration::from_secs(
-                rand::thread_rng().gen_range(15..30),
-            ));
+            self.sleep();
         }
+    }
+}
+
+impl YyypCrawler {
+    fn get_item_types(&self) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+        let html = http::get(utils::API_YYYP_WEAPON)?;
+        let value: Value = serde_json::from_str(html.as_str())?;
+        if let Some(datas) = value["Data"].as_array() {
+            let mut item_types = Vec::new();
+            for data in datas {
+                match data["Name"].as_str() {
+                    Some("匕首") | Some("手套") => {
+                        if let Some(children) = data["Children"].as_array() {
+                            let _ = children
+                                .iter()
+                                .map(|child| match child["Name"].as_str() {
+                                    Some("不限") | None => {}
+                                    Some(_) => {
+                                        if let Some(hash_name) = child["HashName"].as_str() {
+                                            item_types.push(hash_name.to_string());
+                                        }
+                                    }
+                                })
+                                .collect::<()>();
+                        }
+                    }
+                    _ => continue,
+                }
+            }
+            if item_types.len() > 0 {
+                return Ok(item_types);
+            }
+        }
+        let message = "get item types failed";
+        self.alert(message);
+        panic!("{}", message);
     }
 }
 
@@ -163,7 +203,31 @@ impl Crawl for YyypCrawler {
     }
 
     fn run(&self) {
-        todo!()
+        let _ = self
+            .get_item_types()
+            .unwrap()
+            .into_iter()
+            .map(|name| {
+                println!("{}", name);
+            })
+            .collect::<()>();
+        // loop {
+        //     match self.get_item_types() {
+        //         Ok(types) => {
+        //             match self.fetch() {
+        //                 Some(html) => {
+        //                     self.parse(html);
+        //                 }
+        //                 _ => {
+        //                     self.alert("fetch api failed");
+        //                     break;
+        //                 }
+        //             }
+        //             self.sleep();
+        //         }
+        //         _ => self.sleep(),
+        //     }
+        // }
     }
 }
 
