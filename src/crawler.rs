@@ -6,6 +6,7 @@ use crate::utils;
 use chrono::Local;
 use rand::Rng;
 use serde_json::{Error, Value};
+use std::collections::HashMap;
 use std::{thread, time};
 
 pub trait Crawl {
@@ -16,15 +17,6 @@ pub trait Crawl {
     }
 
     fn db(&self) -> &DbHelper;
-
-    fn build_url(&self) -> String;
-
-    fn fetch(&self) -> Option<String> {
-        match http::get(self.build_url().as_str()) {
-            Ok(html) => Some(html),
-            _ => None,
-        }
-    }
 
     fn parse(&self, html: String);
 
@@ -69,6 +61,14 @@ pub struct IgxeCrawler {
     db_helper: DbHelper,
 }
 
+impl BuffCrawler {
+    fn build_url() -> String {
+        let mut url = String::from(utils::API_BUFF);
+        url.push_str(Local::now().timestamp_millis().to_string().as_str());
+        url
+    }
+}
+
 impl Crawl for BuffCrawler {
     fn name(&self) -> &str {
         "BuffCrawler"
@@ -76,12 +76,6 @@ impl Crawl for BuffCrawler {
 
     fn db(&self) -> &DbHelper {
         &self.db_helper
-    }
-
-    fn build_url(&self) -> String {
-        let mut url = String::from(utils::API_BUFF);
-        url.push_str(Local::now().timestamp_millis().to_string().as_str());
-        url
     }
 
     fn parse(&self, html: String) {
@@ -135,8 +129,8 @@ impl Crawl for BuffCrawler {
 
     fn run(&self) {
         loop {
-            match self.fetch() {
-                Some(html) => {
+            match http::get(BuffCrawler::build_url().as_str()) {
+                Ok(html) => {
                     self.parse(html);
                 }
                 _ => {
@@ -183,6 +177,21 @@ impl YyypCrawler {
         self.alert(message);
         panic!("{}", message);
     }
+
+    fn run_single(&self, typo: String) {
+        let mut map = HashMap::new();
+        map.insert("gameId", "730");
+        map.insert("listSortType", "1");
+        map.insert("listType", "10");
+        map.insert("pageSize", "80");
+        map.insert("sortType", "0");
+        map.insert("weapon", typo.as_str());
+        // for i in 1.. {
+        //     let page: i32 = i;
+        //     map.insert("pageIndex", page.to_string().as_str());
+        // }
+        // let res = http::post_json(utils::API_YYYP_PAGE, &map);
+    }
 }
 
 impl Crawl for YyypCrawler {
@@ -194,40 +203,20 @@ impl Crawl for YyypCrawler {
         &self.db_helper
     }
 
-    fn build_url(&self) -> String {
-        todo!()
-    }
-
     fn parse(&self, _html: String) {
         todo!()
     }
 
     fn run(&self) {
-        let _ = self
-            .get_item_types()
-            .unwrap()
-            .into_iter()
-            .map(|name| {
-                println!("{}", name);
-            })
-            .collect::<()>();
-        // loop {
-        //     match self.get_item_types() {
-        //         Ok(types) => {
-        //             match self.fetch() {
-        //                 Some(html) => {
-        //                     self.parse(html);
-        //                 }
-        //                 _ => {
-        //                     self.alert("fetch api failed");
-        //                     break;
-        //                 }
-        //             }
-        //             self.sleep();
-        //         }
-        //         _ => self.sleep(),
-        //     }
-        // }
+        loop {
+            match self.get_item_types() {
+                Ok(types) => types
+                    .into_iter()
+                    .map(|typo| self.run_single(typo))
+                    .collect(),
+                _ => self.sleep(),
+            }
+        }
     }
 }
 
@@ -238,10 +227,6 @@ impl Crawl for IgxeCrawler {
 
     fn db(&self) -> &DbHelper {
         &self.db_helper
-    }
-
-    fn build_url(&self) -> String {
-        todo!()
     }
 
     fn parse(&self, _html: String) {
