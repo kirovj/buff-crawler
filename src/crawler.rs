@@ -274,14 +274,12 @@ impl Crawl for YyypCrawler {
     }
 
     fn run(&self) {
-        loop {
-            match self.get_item_types() {
-                Ok(types) => types
-                    .into_iter()
-                    .map(|typo| self.run_single(typo))
-                    .collect(),
-                _ => self.sleep(),
-            }
+        match self.get_item_types() {
+            Ok(types) => types
+                .into_iter()
+                .map(|typo| self.run_single(typo))
+                .collect(),
+            _ => self.sleep(),
         }
     }
 }
