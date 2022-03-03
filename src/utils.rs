@@ -1,5 +1,7 @@
 use std::fs;
 
+use chrono::Local;
+
 use crate::http;
 
 // constants
@@ -21,6 +23,18 @@ pub fn alert(message: &str) -> () {
 // Retain one decimal place
 pub fn round(f: f32) -> f32 {
     (f * 10f32).round() / 10f32
+}
+
+pub fn current_time() -> String {
+    Local::now().format("%Y-%m-%d %H:%M:%S").to_string()
+}
+
+pub fn current_date() -> String {
+    Local::now().format("%Y-%m-%d").to_string()
+}
+
+pub fn current_timestamp() -> String {
+    Local::now().timestamp_millis().to_string()
 }
 
 #[cfg(test)]

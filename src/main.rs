@@ -35,7 +35,8 @@ fn main() {
     let db_file = match matches.value_of("db") {
         Some(name) => name.to_string(),
         _ => {
-            let mut name = target.to_string();
+            let mut name = String::from("./data/");
+            name.push_str(target);
             name.push_str(".db");
             name
         }
