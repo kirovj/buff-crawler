@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use reqwest::header::{HeaderMap, HeaderValue};
 
 use crate::utils::UA;
@@ -15,14 +17,34 @@ lazy_static! {
         .unwrap();
 }
 
-pub fn request(url: &str) -> Result<String, reqwest::Error> {
+enum Method {
+    Get,
+    PostJson,
+}
+
+fn request(
+    url: &str,
+    method: Method,
+    data: Option<&HashMap<&str, &str>>,
+) -> Result<String, reqwest::Error> {
     let mut times = 1;
     loop {
-        let r = CLIENT.get(url).send()?.text();
+        let r = match method {
+            Method::Get => CLIENT.get(url).send()?.text(),
+            Method::PostJson => CLIENT.post(url).json(data.unwrap()).send()?.text(),
+        };
         if !r.is_ok() && times < 3 {
             times += 1;
             continue;
         }
         break r;
     }
+}
+
+pub fn get(url: &str) -> Result<String, reqwest::Error> {
+    request(url, Method::Get, None)
+}
+
+pub fn post_json(url: &str, data: &HashMap<&str, &str>) -> Result<String, reqwest::Error> {
+    request(url, Method::PostJson, Some(data))
 }
