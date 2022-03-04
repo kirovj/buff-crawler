@@ -5,14 +5,19 @@ use chrono::Local;
 use crate::http;
 
 // constants
-pub const UA: &str = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36";
+pub const UA: &str = 
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36";
 pub const DEFAULT: &str = "无";
-
-pub const API_BUFF: &str = "https://buff.163.com/api/market/goods?game=csgo&page_num=1&page_size=120&use_suggestion=0&trigger=undefined_trigger&_=";
+pub const API_BUFF: &str = 
+    "https://buff.163.com/api/market/goods?game=csgo&page_num=1&page_size=120&use_suggestion=0&trigger=undefined_trigger&_=";
 pub const API_YYYP_WEAPON: &str =
     "https://api.youpin898.com/api/v2/commodity/Tag/GetCsGoWeaponList";
 pub const API_YYYP_PAGE: &str =
     "https://api.youpin898.com/api/homepage/es/template/GetCsGoPagedList";
+pub const API_IGXE_WEAPON: &str = 
+    "https://www.igxe.cn/api/v2/product/search-condition/730";
+pub const API_IGXE_PAGE: &str = 
+    "https://www.igxe.cn/api/v2/product/search/730?app_id=730&ctg_id=5&type_id=34&sort=3&page_no=3&page_size=20";
 
 pub fn alert(message: &str) -> () {
     let mut url = fs::read_to_string("alert.txt").unwrap();
