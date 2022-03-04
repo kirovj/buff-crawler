@@ -13,8 +13,9 @@ pub trait Crawl {
     fn name(&self) -> &str;
 
     fn alert(&self, message: &str) {
+        let message = format!("[{}] {}: {}", utils::current_time(), self.name(), message);
         println!("{}", message);
-        utils::alert(format!("[{}] {}: {}", utils::current_time(), self.name(), message).as_str());
+        utils::alert(message.as_str());
     }
 
     fn db(&self) -> &DbHelper;
@@ -129,10 +130,7 @@ impl Crawl for BuffCrawler {
                 Ok(html) => {
                     self.parse(html);
                 }
-                _ => {
-                    self.alert("fetch api failed");
-                    break;
-                }
+                _ => self.alert("fetch api failed"),
             }
             self.sleep();
         }
