@@ -4,8 +4,9 @@ use crate::item::{Item, PriceInfo};
 use crate::utils;
 
 use rand::Rng;
-use serde_json::{Error, Value};
+use serde_json::{Error as JsonError, Value};
 use std::collections::HashMap;
+use std::error::Error;
 use std::{thread, time};
 
 pub trait Crawl {
@@ -91,7 +92,7 @@ impl Crawl for BuffCrawler {
                 .unwrap_or(utils::DEFAULT)
                 .to_string()
         }
-        let result_value: Result<Value, Error> = serde_json::from_str(html.as_str());
+        let result_value: Result<Value, JsonError> = serde_json::from_str(html.as_str());
         match result_value {
             Ok(value) => {
                 let data = &value["data"];
@@ -139,38 +140,34 @@ impl Crawl for BuffCrawler {
 }
 
 impl YyypCrawler {
-    fn get_item_types(&self) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    fn get_item_types(&self) -> Result<Vec<String>, Box<dyn Error>> {
+        let mut item_types = Vec::new();
         let html = http::get(utils::API_YYYP_WEAPON)?;
         let value: Value = serde_json::from_str(html.as_str())?;
-        if let Some(datas) = value["Data"].as_array() {
-            let mut item_types = Vec::new();
-            for data in datas {
-                match data["Name"].as_str() {
-                    Some("匕首") | Some("手套") => {
-                        if let Some(children) = data["Children"].as_array() {
-                            let _ = children
-                                .iter()
-                                .map(|child| match child["Name"].as_str() {
-                                    Some("不限") | None => {}
-                                    Some(_) => {
-                                        if let Some(hash_name) = child["HashName"].as_str() {
-                                            item_types.push(hash_name.to_string());
-                                        }
+        let _ = value["Data"]
+            .as_array()
+            .unwrap_or(&Vec::new())
+            .into_iter()
+            .map(|data| match data["Name"].as_str() {
+                Some("匕首") | Some("手套") => {
+                    if let Some(children) = data["Children"].as_array() {
+                        let _ = children
+                            .iter()
+                            .map(|child| match child["Name"].as_str() {
+                                Some("不限") | None => {}
+                                Some(_) => {
+                                    if let Some(hash_name) = child["HashName"].as_str() {
+                                        item_types.push(hash_name.to_string());
                                     }
-                                })
-                                .collect::<()>();
-                        }
+                                }
+                            })
+                            .collect::<()>();
                     }
-                    _ => continue,
                 }
-            }
-            if item_types.len() > 0 {
-                return Ok(item_types);
-            }
-        }
-        let message = "get item types failed";
-        self.alert(message);
-        panic!("{}", message);
+                _ => {}
+            })
+            .collect::<()>();
+        Ok(item_types)
     }
 
     fn run_single(&self, typo: String) {
@@ -225,7 +222,7 @@ impl Crawl for YyypCrawler {
     }
 
     fn parse(&self, html: String) -> bool {
-        let result_value: Result<Value, Error> = serde_json::from_str(html.as_str());
+        let result_value: Result<Value, JsonError> = serde_json::from_str(html.as_str());
         match result_value {
             Ok(value) => match value["TotalCount"].as_u64() {
                 None => {
@@ -275,12 +272,50 @@ impl Crawl for YyypCrawler {
 
     fn run(&self) {
         match self.get_item_types() {
-            Ok(types) => types
+            Ok(types) if types.len() > 0 => types
                 .into_iter()
                 .map(|typo| self.run_single(typo))
                 .collect(),
-            _ => self.sleep(),
+            _ => self.alert("get item types failed"),
         }
+    }
+}
+
+impl IgxeCrawler {
+    fn get_item_types(&self) -> Result<Vec<(u64, u64, String, String)>, Box<dyn Error>> {
+        let mut vec = Vec::new();
+        let json = http::get(utils::API_YYYP_WEAPON)?;
+        let value: Value = serde_json::from_str(json.as_str())?;
+        let _ = value["data"]["menus"]
+            .as_array()
+            .unwrap_or(&Vec::new())
+            .into_iter()
+            .map(|menu| match menu["name"].as_str() {
+                Some(name @ "匕首") | Some(name @ "手套") => {
+                    if let Some(id) = menu["id"].as_u64() {
+                        let _ = menu["product_types"]
+                            .as_array()
+                            .unwrap_or(&Vec::new())
+                            .into_iter()
+                            .map(|typo| {
+                                vec.push((
+                                    id,
+                                    typo["id"].as_u64().unwrap(),
+                                    String::from(name),
+                                    typo["name"].as_str().unwrap().to_string(),
+                                ));
+                            })
+                            .collect::<()>();
+                    }
+                }
+                _ => {}
+            })
+            .collect::<()>();
+        Ok(vec)
+    }
+
+    fn run_single(&self, _typo: (u64, u64, String, String)) {
+        todo!()
     }
 }
 
@@ -298,7 +333,13 @@ impl Crawl for IgxeCrawler {
     }
 
     fn run(&self) {
-        todo!()
+        match self.get_item_types() {
+            Ok(types) if types.len() > 0 => types
+                .into_iter()
+                .map(|typo| self.run_single(typo))
+                .collect(),
+            _ => self.alert("get item types failed"),
+        }
     }
 }
 
