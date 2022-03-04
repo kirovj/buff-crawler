@@ -42,7 +42,7 @@ pub trait Crawl {
 
     fn sleep(&self) {
         thread::sleep(time::Duration::from_secs(
-            rand::thread_rng().gen_range(15..30),
+            rand::thread_rng().gen_range(20..40),
         ));
     }
 }
