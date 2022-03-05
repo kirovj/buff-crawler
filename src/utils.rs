@@ -17,7 +17,7 @@ pub const API_YYYP_PAGE: &str =
 pub const API_IGXE_WEAPON: &str = 
     "https://www.igxe.cn/api/v2/product/search-condition/730";
 pub const API_IGXE_PAGE: &str = 
-    "https://www.igxe.cn/api/v2/product/search/730?app_id=730&ctg_id=5&type_id=34&sort=3&page_no=3&page_size=20";
+    "https://www.igxe.cn/api/v2/product/search/730?app_id=730&sort=3&page_size=20&ctg_id=5&type_id=34&page_no=3";
 
 pub fn alert(message: &str) -> () {
     let mut url = fs::read_to_string("alert.txt").unwrap();

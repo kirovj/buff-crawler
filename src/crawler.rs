@@ -20,8 +20,6 @@ pub trait Crawl {
 
     fn db(&self) -> &DbHelper;
 
-    fn parse(&self, html: String) -> bool;
-
     fn run(&self);
 
     fn persistent(&self, item: Item, price: &str) {
@@ -75,16 +73,6 @@ impl BuffCrawler {
         url.push_str(utils::current_timestamp().as_str());
         url
     }
-}
-
-impl Crawl for BuffCrawler {
-    fn name(&self) -> &str {
-        "BuffCrawler"
-    }
-
-    fn db(&self) -> &DbHelper {
-        &self.db_helper
-    }
 
     fn parse(&self, html: String) -> bool {
         fn get_value(value: &Value, key: &str) -> String {
@@ -122,6 +110,16 @@ impl Crawl for BuffCrawler {
             _ => self.alert("read whole json failed"),
         }
         true
+    }
+}
+
+impl Crawl for BuffCrawler {
+    fn name(&self) -> &str {
+        "BuffCrawler"
+    }
+
+    fn db(&self) -> &DbHelper {
+        &self.db_helper
     }
 
     fn run(&self) {
@@ -168,35 +166,6 @@ impl YyypCrawler {
         Ok(item_types)
     }
 
-    fn run_single(&self, typo: String) {
-        for i in 1.. {
-            let mut map = HashMap::new();
-            map.insert("gameId", "730");
-            map.insert("listSortType", "1");
-            map.insert("listType", "10");
-            map.insert("pageSize", "20");
-            map.insert("sortType", "0");
-            map.insert("weapon", typo.as_str());
-            let page = i.to_string();
-            map.insert("pageIndex", page.as_str());
-            match http::post_json(utils::API_YYYP_PAGE, &map) {
-                Ok(html) => {
-                    println!(
-                        "[{}] start parse {} page {}",
-                        utils::current_time(),
-                        typo,
-                        i
-                    );
-                    if !self.parse(html) {
-                        break;
-                    }
-                    self.sleep();
-                }
-                Err(e) => self.alert(e.to_string().as_str()),
-            }
-        }
-    }
-
     fn get_type_by_name(name: &str) -> String {
         let mut vec = Vec::new();
         let name = String::from(name);
@@ -207,16 +176,6 @@ impl YyypCrawler {
             vec.push(c.to_string());
         }
         vec.concat()
-    }
-}
-
-impl Crawl for YyypCrawler {
-    fn name(&self) -> &str {
-        "YyypCrawler"
-    }
-
-    fn db(&self) -> &DbHelper {
-        &self.db_helper
     }
 
     fn parse(&self, html: String) -> bool {
@@ -268,28 +227,67 @@ impl Crawl for YyypCrawler {
         }
     }
 
+    fn run_pages(&self, typo: String) {
+        for i in 1.. {
+            let mut map = HashMap::new();
+            map.insert("gameId", "730");
+            map.insert("listSortType", "1");
+            map.insert("listType", "10");
+            map.insert("pageSize", "20");
+            map.insert("sortType", "0");
+            map.insert("weapon", typo.as_str());
+            let page = i.to_string();
+            map.insert("pageIndex", page.as_str());
+            match http::post_json(utils::API_YYYP_PAGE, &map) {
+                Ok(html) => {
+                    println!(
+                        "[{}] start parse {} page {}",
+                        utils::current_time(),
+                        typo,
+                        page
+                    );
+                    if !self.parse(html) {
+                        break;
+                    }
+                    self.sleep();
+                }
+                Err(e) => self.alert(e.to_string().as_str()),
+            }
+        }
+    }
+}
+
+impl Crawl for YyypCrawler {
+    fn name(&self) -> &str {
+        "YyypCrawler"
+    }
+
+    fn db(&self) -> &DbHelper {
+        &self.db_helper
+    }
+
     fn run(&self) {
         match self.get_item_types() {
-            Ok(types) if types.len() > 0 => types
-                .into_iter()
-                .map(|typo| self.run_single(typo))
-                .collect(),
+            Ok(types) if types.len() > 0 => {
+                types.into_iter().map(|typo| self.run_pages(typo)).collect()
+            }
             _ => self.alert("get item types failed"),
         }
     }
 }
 
 impl IgxeCrawler {
-    fn get_item_types(&self) -> Result<Vec<(u64, u64, String, String)>, Box<dyn Error>> {
+    // class_id, class, typo_id, typo
+    fn get_item_params(&self) -> Result<Vec<(u64, String, u64, String)>, Box<dyn Error>> {
         let mut vec = Vec::new();
-        let json = http::get(utils::API_YYYP_WEAPON)?;
+        let json = http::get(utils::API_IGXE_WEAPON)?;
         let value: Value = serde_json::from_str(json.as_str())?;
         let _ = value["data"]["menus"]
             .as_array()
             .unwrap_or(&Vec::new())
             .into_iter()
             .map(|menu| match menu["name"].as_str() {
-                Some(name @ "匕首") | Some(name @ "手套") => {
+                Some(class @ "匕首") | Some(class @ "手套") => {
                     if let Some(id) = menu["id"].as_u64() {
                         let _ = menu["product_types"]
                             .as_array()
@@ -298,8 +296,8 @@ impl IgxeCrawler {
                             .map(|typo| {
                                 vec.push((
                                     id,
+                                    String::from(class),
                                     typo["id"].as_u64().unwrap(),
-                                    String::from(name),
                                     typo["name"].as_str().unwrap().to_string(),
                                 ));
                             })
@@ -312,8 +310,81 @@ impl IgxeCrawler {
         Ok(vec)
     }
 
-    fn run_single(&self, _typo: (u64, u64, String, String)) {
-        todo!()
+    fn parse(&self, html: &str, class: &str, typo: &str) -> bool {
+        let result_value: Result<Value, JsonError> = serde_json::from_str(html);
+        match result_value {
+            Ok(value) => match value["code"].as_u64() {
+                Some(200) => {
+                    let data = &value["data"];
+                    let page_info = &data["page"];
+                    let page_count = page_info["page_count"].as_u64().unwrap();
+                    let page_no = page_info["page_no"].as_u64().unwrap();
+                    let _ = data["data"]
+                        .as_array()
+                        .unwrap_or(&Vec::new())
+                        .into_iter()
+                        .filter(|d| d["ags_sale_count"].as_u64().unwrap() > 0)
+                        .map(|d| {
+                            if let Some(price) = d["ags_min_price"].as_str() {
+                                let name = d["name"].as_str().unwrap();
+                                self.persistent(
+                                    Item::new(
+                                        name.to_string(),
+                                        String::from(class),
+                                        String::from(typo),
+                                        d["exterior_name"].as_str().unwrap().to_string(),
+                                        d["quality_name"].as_str().unwrap().to_string(),
+                                        d["rarity_name"].as_str().unwrap().to_string(),
+                                        name.contains("StatTrak"),
+                                    ),
+                                    price,
+                                );
+                            }
+                        })
+                        .collect::<()>();
+                    page_no <= page_count
+                }
+                _ => {
+                    self.alert(format!("fetch api failed\n{}", html).as_str());
+                    false
+                }
+            },
+            _ => {
+                self.alert("read whole json failed");
+                false
+            }
+        }
+    }
+
+    fn run_pages(&self, params: (u64, String, u64, String)) {
+        let (class_id, class, typo_id, typo) = params;
+        let mut temp_url = String::from(utils::API_IGXE_PAGE);
+        temp_url.push_str("&ctg_id=");
+        temp_url.push_str(class_id.to_string().as_str());
+        temp_url.push_str("&type_id");
+        temp_url.push_str(typo_id.to_string().as_str());
+        temp_url.push_str("&page_no=");
+        for i in 1.. {
+            let page = i.to_string();
+            let mut url = String::from(temp_url.as_str());
+            url.push_str(page.as_str());
+            match http::get(url.as_str()) {
+                Ok(html) => {
+                    println!(
+                        "[{}] start parse {} {} page {}",
+                        utils::current_time(),
+                        class,
+                        typo,
+                        page
+                    );
+                    if !self.parse(html.as_str(), class.as_str(), typo.as_str()) {
+                        break;
+                    }
+                    self.sleep();
+                }
+                Err(e) => self.alert(e.to_string().as_str()),
+            }
+        }
     }
 }
 
@@ -326,15 +397,11 @@ impl Crawl for IgxeCrawler {
         &self.db_helper
     }
 
-    fn parse(&self, _html: String) -> bool {
-        todo!()
-    }
-
     fn run(&self) {
-        match self.get_item_types() {
-            Ok(types) if types.len() > 0 => types
+        match self.get_item_params() {
+            Ok(params) if params.len() > 0 => params
                 .into_iter()
-                .map(|typo| self.run_single(typo))
+                .map(|param| self.run_pages(param))
                 .collect(),
             _ => self.alert("get item types failed"),
         }
@@ -343,13 +410,11 @@ impl Crawl for IgxeCrawler {
 
 #[cfg(test)]
 mod test {
-    use super::YyypCrawler;
+    use super::*;
 
     #[test]
-    fn test_get_type_from_name() {
-        assert_eq!(
-            "鲍伊猎刀",
-            YyypCrawler::get_type_by_name("鲍伊猎刀（★ StatTrak™） | 虎牙 (崭新出厂)")
-        );
+    fn test_igxe() {
+        let crawler = build_crawler("igxe", "igxe.db");
+        crawler.unwrap().run();
     }
 }
