@@ -1,5 +1,6 @@
-# csgo-crawler
-csgo item daily price info crawler
+# csgo-item-price
+csgo item daily price info crawler and server.
+use pure rust to build crawler, server and front.
 
 # Usage
     csgo-crawler.exe [FLAGS] [OPTIONS] --target <target>
