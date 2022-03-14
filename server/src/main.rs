@@ -1,3 +1,4 @@
 fn main() {
-    println!("Hello, world!");
+    let c = crawler::build_crawler("buff", "buff.db").unwrap();
+    c.alert("test");
 }
