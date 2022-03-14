@@ -1,7 +1,13 @@
-use crate::db::DbHelper;
-use crate::http;
-use crate::item::{Item, PriceInfo};
-use crate::utils;
+#[macro_use]
+extern crate lazy_static;
+
+mod db;
+mod http;
+mod item;
+mod utils;
+
+use db::DbHelper;
+use item::{Item, PriceInfo};
 
 use rand::Rng;
 use serde_json::{Error as JsonError, Value};
