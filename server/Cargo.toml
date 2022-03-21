@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 crawler = {path = "../crawler"}
+axum="0.4.8"
+tokio = { version = "1.0", features = ["full"] }
