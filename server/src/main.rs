@@ -8,7 +8,7 @@ async fn crawl(target: &str, db_file: &str) {
 
 #[tokio::main]
 async fn main() {
-    let _ = tokio::spawn(crawl("buff", "buff.db"));
+    let _ = tokio::spawn(crawl("buff", "./data/buff.db"));
 
     // build our application with a single route
     let app = Router::new().route("/", get(|| async { "Hello, World!" }));
