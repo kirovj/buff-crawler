@@ -1,7 +1,16 @@
+#[macro_use]
+extern crate lazy_static;
+
+mod crawl;
+mod db;
+mod http;
+mod item;
+mod utils;
+
 use axum::{routing::get, Router};
 
 async fn crawl(target: &str, db_file: &str) {
-    let c = crawler::build_crawler(target, db_file).unwrap();
+    let c = crawl::build_crawler(target, db_file).unwrap();
     println!("{target} crawler start");
     c.run();
 }
