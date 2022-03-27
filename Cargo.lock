@@ -145,6 +145,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "csgo-item-price"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "chrono",
+ "lazy_static",
+ "rand",
+ "rusqlite",
+ "serde_json",
+ "tokio",
+ "ureq",
+]
+
+[[package]]
 name = "fallible-iterator"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -713,20 +727,6 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "server"
-version = "0.1.0"
-dependencies = [
- "axum",
- "chrono",
- "lazy_static",
- "rand",
- "rusqlite",
- "serde_json",
- "tokio",
- "ureq",
 ]
 
 [[package]]

@@ -14,10 +14,8 @@ pub const API_YYYP_WEAPON: &str =
     "https://api.youpin898.com/api/v2/commodity/Tag/GetCsGoWeaponList";
 pub const API_YYYP_PAGE: &str =
     "https://api.youpin898.com/api/homepage/es/template/GetCsGoPagedList";
-pub const API_IGXE_WEAPON: &str = 
-    "https://www.igxe.cn/api/v2/product/search-condition/730";
-pub const API_IGXE_PAGE: &str = 
-    "https://www.igxe.cn/api/v2/product/search/730?app_id=730&sort=3&page_size=20&ctg_id=5&type_id=34&page_no=3";
+pub const DB_FILE_BUFF: &str = "./data/buff.db";
+pub const DB_FILE_YYYP: &str = "./data/yyyp.db";
 
 pub fn alert(message: &str) -> () {
     let mut url = fs::read_to_string("alert.txt").unwrap();

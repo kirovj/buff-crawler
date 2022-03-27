@@ -9,6 +9,11 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::{thread, time};
 
+pub enum Target {
+    Buff,
+    Yyyp,
+}
+
 pub trait Crawl {
     fn name(&self) -> &str;
 
@@ -45,12 +50,11 @@ pub trait Crawl {
     }
 }
 
-pub fn build_crawler(target: &str, db_file: &str) -> Option<Box<dyn Crawl>> {
+pub fn build_crawler(target: Target, db_file: &str) -> Option<Box<dyn Crawl>> {
     let db_helper = DbHelper::new(db_file);
     match target {
-        "buff" => Some(Box::new(BuffCrawler { db_helper })),
-        "yyyp" => Some(Box::new(YyypCrawler { db_helper })),
-        "igxe" => Some(Box::new(IgxeCrawler { db_helper })),
+        Target::Buff => Some(Box::new(BuffCrawler { db_helper })),
+        Target::Yyyp => Some(Box::new(YyypCrawler { db_helper })),
         _ => None,
     }
 }
@@ -60,10 +64,6 @@ pub struct BuffCrawler {
 }
 
 pub struct YyypCrawler {
-    db_helper: DbHelper,
-}
-
-pub struct IgxeCrawler {
     db_helper: DbHelper,
 }
 
@@ -273,148 +273,5 @@ impl Crawl for YyypCrawler {
             }
             _ => self.alert("get item types failed"),
         }
-    }
-}
-
-impl IgxeCrawler {
-    // class_id, class, typo_id, typo
-    fn get_item_params(&self) -> Result<Vec<(u64, String, u64, String)>, Box<dyn Error>> {
-        let mut vec = Vec::new();
-        let json = http::get(utils::API_IGXE_WEAPON)?;
-        let value: Value = serde_json::from_str(json.as_str())?;
-        let _ = value["data"]["menus"]
-            .as_array()
-            .unwrap_or(&Vec::new())
-            .into_iter()
-            .map(|menu| match menu["name"].as_str() {
-                Some(class @ "匕首") | Some(class @ "手套") => {
-                    if let Some(id) = menu["id"].as_u64() {
-                        let _ = menu["product_types"]
-                            .as_array()
-                            .unwrap_or(&Vec::new())
-                            .into_iter()
-                            .map(|typo| {
-                                vec.push((
-                                    id,
-                                    String::from(class),
-                                    typo["id"].as_u64().unwrap(),
-                                    typo["name"].as_str().unwrap().to_string(),
-                                ));
-                            })
-                            .collect::<()>();
-                    }
-                }
-                _ => {}
-            })
-            .collect::<()>();
-        Ok(vec)
-    }
-
-    fn parse(&self, html: &str, class: &str, typo: &str) -> bool {
-        let result_value: Result<Value, JsonError> = serde_json::from_str(html);
-        match result_value {
-            Ok(value) => match value["code"].as_u64() {
-                Some(200) => {
-                    let data = &value["data"];
-                    let page_info = &data["page"];
-                    let page_count = page_info["page_count"].as_u64().unwrap();
-                    let page_no = page_info["page_no"].as_u64().unwrap();
-                    let _ = data["data"]
-                        .as_array()
-                        .unwrap_or(&Vec::new())
-                        .into_iter()
-                        .filter(|d| d["ags_sale_count"].as_u64().unwrap() > 0)
-                        .map(|d| {
-                            if let Some(price) = d["ags_min_price"].as_str() {
-                                let name = d["name"].as_str().unwrap();
-                                self.persistent(
-                                    Item::new(
-                                        name.to_string(),
-                                        String::from(class),
-                                        String::from(typo),
-                                        d["exterior_name"].as_str().unwrap().to_string(),
-                                        d["quality_name"].as_str().unwrap().to_string(),
-                                        d["rarity_name"].as_str().unwrap().to_string(),
-                                        name.contains("StatTrak"),
-                                    ),
-                                    price,
-                                );
-                            }
-                        })
-                        .collect::<()>();
-                    page_no <= page_count
-                }
-                _ => {
-                    self.alert(format!("fetch api failed\n{}", html).as_str());
-                    false
-                }
-            },
-            _ => {
-                self.alert("read whole json failed");
-                false
-            }
-        }
-    }
-
-    fn run_pages(&self, params: (u64, String, u64, String)) {
-        let (class_id, class, typo_id, typo) = params;
-        let mut temp_url = String::from(utils::API_IGXE_PAGE);
-        temp_url.push_str("&ctg_id=");
-        temp_url.push_str(class_id.to_string().as_str());
-        temp_url.push_str("&type_id");
-        temp_url.push_str(typo_id.to_string().as_str());
-        temp_url.push_str("&page_no=");
-        for i in 1.. {
-            let page = i.to_string();
-            let mut url = String::from(temp_url.as_str());
-            url.push_str(page.as_str());
-            match http::get(url.as_str()) {
-                Ok(html) => {
-                    println!(
-                        "[{}] start parse {} {} page {}",
-                        utils::current_time(),
-                        class,
-                        typo,
-                        page
-                    );
-                    if !self.parse(html.as_str(), class.as_str(), typo.as_str()) {
-                        break;
-                    }
-                    self.sleep();
-                }
-                Err(e) => self.alert(e.to_string().as_str()),
-            }
-        }
-    }
-}
-
-impl Crawl for IgxeCrawler {
-    fn name(&self) -> &str {
-        "IgxeCrawler"
-    }
-
-    fn db(&self) -> &DbHelper {
-        &self.db_helper
-    }
-
-    fn run(&self) {
-        match self.get_item_params() {
-            Ok(params) if params.len() > 0 => params
-                .into_iter()
-                .map(|param| self.run_pages(param))
-                .collect(),
-            _ => self.alert("get item types failed"),
-        }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_igxe() {
-        let crawler = build_crawler("igxe", "igxe.db");
-        crawler.unwrap().run();
     }
 }
