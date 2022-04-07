@@ -14,6 +14,16 @@ pub enum Target {
     Yyyp,
 }
 
+impl From<&str> for Target {
+    fn from(s: &str) -> Self {
+        match s {
+            "buff" => Target::Buff,
+            "yyyp" => Target::Yyyp,
+            _ => panic!("Unknown target: {}", s),
+        }
+    }
+}
+
 pub trait Crawl {
     fn name(&self) -> &str;
 

@@ -23,6 +23,9 @@ struct FindData {
 }
 
 async fn find_data(Json(payload): Json<FindData>) -> String {
+    let target = Target::from(payload.target.as_str());
+    let db = get_dbconnection(target);
+    let db = db.lock().unwrap();
     format!("{}, {}", payload.target, payload.name)
 }
 

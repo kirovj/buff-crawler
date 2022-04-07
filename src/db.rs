@@ -127,6 +127,29 @@ impl DbHelper {
             }
         }
     }
+
+    pub fn find_items_by_name(&self, name: String) -> Result<Vec<Item>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT * from Item where name like '%?1%'")?;
+        let mut items: Vec<Item> = Vec::new();
+        let _items = stmt.query_map(params![name], |row| {
+            Ok(Item {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                class: row.get(2)?,
+                typo: row.get(3)?,
+                ware: row.get(4)?,
+                quality: row.get(5)?,
+                rarity: row.get(6)?,
+                stat_trak: row.get(7)?,
+            })
+        })?;
+        for _item in items.into_iter() {
+            items.push(_item);
+        }
+        Ok(items)
+    }
 }
 
 #[cfg(test)]
