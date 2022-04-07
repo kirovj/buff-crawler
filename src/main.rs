@@ -4,25 +4,26 @@ mod http;
 mod item;
 mod utils;
 
+use crate::{crawl::Target, db::DbHelper};
 use axum::{
+    extract::Json,
     routing::{get, post},
     Router,
 };
-
-use crate::{crawl::Target, db::DbHelper};
-
+use serde::Deserialize;
 use std::{
     mem::MaybeUninit,
     sync::{Mutex, Once},
 };
 
-async fn crawl(target: Target, db_file: &str) {
-    let c = crawl::build_crawler(target, db_file).unwrap();
-    c.run();
+#[derive(Deserialize)]
+struct FindData {
+    target: String,
+    name: String,
 }
 
-async fn find_data() -> String {
-    todo!()
+async fn find_data(Json(payload): Json<FindData>) -> String {
+    format!("{}, {}", payload.target, payload.name)
 }
 
 fn get_db_file(target: Target) -> &'static str {
@@ -49,9 +50,7 @@ fn get_dbconnection(target: Target) -> &'static Mutex<DbHelper> {
 
 #[tokio::main]
 async fn main() {
-    let db_buff = DbHelper::new(utils::DB_FILE_BUFF);
-    let db_yyyp = DbHelper::new(utils::DB_FILE_YYYP);
-
+    // let db_buff = get_dbconnection(Target::Yyyp);
     // let _ = tokio::spawn(crawl(Target::Buff, "./data/buff.db"));
 
     // build our application with a single route

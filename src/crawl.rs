@@ -50,15 +50,6 @@ pub trait Crawl {
     }
 }
 
-pub fn build_crawler(target: Target, db_file: &str) -> Option<Box<dyn Crawl>> {
-    let db_helper = DbHelper::new(db_file);
-    match target {
-        Target::Buff => Some(Box::new(BuffCrawler { db_helper })),
-        Target::Yyyp => Some(Box::new(YyypCrawler { db_helper })),
-        _ => None,
-    }
-}
-
 pub struct BuffCrawler {
     db_helper: DbHelper,
 }
