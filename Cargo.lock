@@ -150,7 +150,6 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "chrono",
- "lazy_static",
  "rand",
  "rusqlite",
  "serde_json",
