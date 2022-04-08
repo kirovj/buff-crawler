@@ -11,6 +11,7 @@ use axum::{
     Router,
 };
 use serde::Deserialize;
+use serde_json::Value;
 use std::{
     mem::MaybeUninit,
     sync::{Mutex, Once},
@@ -22,11 +23,12 @@ struct FindData {
     name: String,
 }
 
-async fn find_data(Json(payload): Json<FindData>) -> String {
+async fn find_data(Json(payload): Json<FindData>) -> Json<Value> {
     let target = Target::from(payload.target.as_str());
     let db = get_dbconnection(target);
     let db = db.lock().unwrap();
-    format!("{}, {}", payload.target, payload.name)
+    let data = db.find_items_by_name(payload.name).unwrap();
+    Json(serde_json::to_value(data).unwrap())
 }
 
 fn get_db_file(target: Target) -> &'static str {
