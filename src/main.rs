@@ -10,8 +10,9 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use serde::Deserialize;
-use serde_json::{json, Value};
+use item::{Item, PriceInfo};
+use rusqlite::Error;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     mem::MaybeUninit,
@@ -19,33 +20,56 @@ use std::{
 };
 
 #[derive(Deserialize)]
-struct Search {
+struct Request {
     target: String,
-    typo: String,
     name: String,
     item_id: u32,
 }
 
-async fn find(Json(payload): Json<Search>) -> Json<Value> {
-    match payload.typo.as_str() {
-        "item" => get_items_by_name(payload).await,
-        "price" => get_price_by_item_id(payload).await,
-        _ => Json(json!({ "error": "typo error, use price or item" })),
+#[derive(Serialize)]
+struct Response<T> {
+    status: u8,
+    message: String,
+    data: Option<Vec<T>>,
+}
+
+impl<T: Serialize> Response<T> {
+    fn ok(data: Vec<T>) -> Self {
+        Response {
+            status: 0,
+            message: String::from("ok"),
+            data: Some(data),
+        }
+    }
+
+    fn fail(message: String) -> Self {
+        Response {
+            status: 1,
+            message,
+            data: None,
+        }
+    }
+
+    fn new(result: Result<Vec<T>, Error>) -> Self {
+        match result {
+            Ok(data) => Self::ok(data),
+            Err(e) => Self::fail(e.to_string()),
+        }
     }
 }
 
-async fn get_items_by_name(payload: Search) -> Json<Value> {
-    let target = Target::from(payload.target.as_str());
+async fn get_items_by_name(Json(request): Json<Request>) -> Json<Response<Item>> {
+    let target = Target::from(request.target.as_str());
     let db = get_db_helper(target).lock().unwrap();
-    let data = db.find_items_by_name(payload.name).unwrap();
-    Json(serde_json::to_value(data).unwrap())
+    let data = db.find_items_by_name(request.name);
+    Json(Response::new(data))
 }
 
-async fn get_price_by_item_id(payload: Search) -> Json<Value> {
-    let target = Target::from(payload.target.as_str());
+async fn get_price_by_item_id(Json(request): Json<Request>) -> Json<Response<PriceInfo>> {
+    let target = Target::from(request.target.as_str());
     let db = get_db_helper(target).lock().unwrap();
-    let data = db.find_price_by_item_id(payload.item_id).unwrap();
-    Json(serde_json::to_value(data).unwrap())
+    let data = db.find_price_by_item_id(request.item_id);
+    Json(Response::new(data))
 }
 
 fn get_dbconnection_container() -> &'static HashMap<Target, Mutex<DbHelper>> {
@@ -77,7 +101,8 @@ async fn main() {
     // build our application with a single route
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
-        .route("/find", post(find));
+        .route("/find_item", post(get_items_by_name))
+        .route("/find_price", post(get_price_by_item_id));
 
     println!("server start");
     // run it with hyper on localhost:3000
