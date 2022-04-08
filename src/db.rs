@@ -150,6 +150,27 @@ impl DbHelper {
         }
         Ok(items)
     }
+
+    pub fn find_price_by_item_id(&self, item_id: u32) -> Result<Vec<PriceInfo>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT * from PriceInfo where item_id = ?1")?;
+        let mut price_infos: Vec<PriceInfo> = Vec::new();
+        let price_info_iter = stmt.query_map(params![item_id], |row| {
+            Ok(PriceInfo {
+                id: row.get(0)?,
+                item_id: row.get(1)?,
+                date: row.get(2)?,
+                price: row.get(3)?,
+            })
+        })?;
+        for _price_info in price_info_iter {
+            if let Ok(price_info) = _price_info {
+                price_infos.push(price_info);
+            }
+        }
+        Ok(price_infos)
+    }
 }
 
 #[cfg(test)]
