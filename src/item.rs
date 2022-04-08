@@ -64,7 +64,7 @@ impl Item {
     }
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct PriceInfo {
     pub id: usize,
     pub item_id: u32,

@@ -11,23 +11,39 @@ use axum::{
     Router,
 };
 use serde::Deserialize;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::{
     mem::MaybeUninit,
     sync::{Mutex, Once},
 };
 
 #[derive(Deserialize)]
-struct FindData {
+struct Search {
     target: String,
+    typo: String,
     name: String,
+    item_id: u32,
 }
 
-async fn find_data(Json(payload): Json<FindData>) -> Json<Value> {
+async fn find(Json(payload): Json<Search>) -> Json<Value> {
+    match payload.typo.as_str() {
+        "item" => get_items_by_name(payload).await,
+        "price" => get_price_by_item_id(payload).await,
+        _ => Json(json!({ "error": "typo error" })),
+    }
+}
+
+async fn get_items_by_name(payload: Search) -> Json<Value> {
     let target = Target::from(payload.target.as_str());
-    let db = get_dbconnection(target);
-    let db = db.lock().unwrap();
+    let db = get_dbconnection(target).lock().unwrap();
     let data = db.find_items_by_name(payload.name).unwrap();
+    Json(serde_json::to_value(data).unwrap())
+}
+
+async fn get_price_by_item_id(payload: Search) -> Json<Value> {
+    let target = Target::from(payload.target.as_str());
+    let db = get_dbconnection(target).lock().unwrap();
+    let data = db.find_price_by_item_id(payload.item_id).unwrap();
     Json(serde_json::to_value(data).unwrap())
 }
 
@@ -61,7 +77,7 @@ async fn main() {
     // build our application with a single route
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
-        .route("/find", post(find_data));
+        .route("/find", post(find));
 
     println!("server start");
     // run it with hyper on localhost:3000
