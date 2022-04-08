@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::{thread, time};
 
+#[derive(PartialEq, Eq, Hash)]
 pub enum Target {
     Buff,
     Yyyp,

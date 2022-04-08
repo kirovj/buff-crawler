@@ -13,6 +13,7 @@ use axum::{
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::{
+    collections::HashMap,
     mem::MaybeUninit,
     sync::{Mutex, Once},
 };
@@ -29,44 +30,43 @@ async fn find(Json(payload): Json<Search>) -> Json<Value> {
     match payload.typo.as_str() {
         "item" => get_items_by_name(payload).await,
         "price" => get_price_by_item_id(payload).await,
-        _ => Json(json!({ "error": "typo error" })),
+        _ => Json(json!({ "error": "typo error, use price or item" })),
     }
 }
 
 async fn get_items_by_name(payload: Search) -> Json<Value> {
     let target = Target::from(payload.target.as_str());
-    let db = get_dbconnection(target).lock().unwrap();
+    let db = get_db_helper(target).lock().unwrap();
     let data = db.find_items_by_name(payload.name).unwrap();
     Json(serde_json::to_value(data).unwrap())
 }
 
 async fn get_price_by_item_id(payload: Search) -> Json<Value> {
     let target = Target::from(payload.target.as_str());
-    let db = get_dbconnection(target).lock().unwrap();
+    let db = get_db_helper(target).lock().unwrap();
     let data = db.find_price_by_item_id(payload.item_id).unwrap();
     Json(serde_json::to_value(data).unwrap())
 }
 
-fn get_db_file(target: Target) -> &'static str {
-    match target {
-        Target::Buff => utils::DB_FILE_BUFF,
-        Target::Yyyp => utils::DB_FILE_YYYP,
-    }
-}
-
-fn get_dbconnection(target: Target) -> &'static Mutex<DbHelper> {
-    let db_file = get_db_file(target);
-    // 使用MaybeUninit延迟初始化
-    static mut DB_CONNECTION: MaybeUninit<Mutex<DbHelper>> = MaybeUninit::uninit();
-    // Once带锁保证只进行一次初始化
+fn get_dbconnection_container() -> &'static HashMap<Target, Mutex<DbHelper>> {
+    // 使用 MaybeUninit 延迟初始化
+    static mut DB_CONNECTION_CONTAINER: MaybeUninit<HashMap<Target, Mutex<DbHelper>>> =
+        MaybeUninit::uninit();
+    // Once 带锁保证只进行一次初始化
     static INIT: Once = Once::new();
     INIT.call_once(|| unsafe {
-        println!("Initializing DB connection to {}", db_file);
-        DB_CONNECTION
-            .as_mut_ptr()
-            .write(Mutex::new(DbHelper::new(db_file)));
+        println!("Initializing DB connection container");
+        let mut map = HashMap::new();
+        map.insert(Target::Buff, Mutex::new(DbHelper::new(utils::DB_FILE_BUFF)));
+        map.insert(Target::Yyyp, Mutex::new(DbHelper::new(utils::DB_FILE_YYYP)));
+        DB_CONNECTION_CONTAINER.as_mut_ptr().write(map);
     });
-    unsafe { &*DB_CONNECTION.as_ptr() }
+    unsafe { &*DB_CONNECTION_CONTAINER.as_ptr() }
+}
+
+fn get_db_helper(target: Target) -> &'static Mutex<DbHelper> {
+    let container = get_dbconnection_container();
+    container.get(&target).unwrap()
 }
 
 #[tokio::main]
