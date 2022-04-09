@@ -59,15 +59,13 @@ impl<T: Serialize> Response<T> {
 }
 
 async fn get_items_by_name(Json(request): Json<Request>) -> Json<Response<Item>> {
-    let target = Target::from(request.target.as_str());
-    let db = get_db_helper(target).lock().unwrap();
+    let db = get_db_helper(request.target).lock().unwrap();
     let data = db.find_items_by_name(request.name);
     Json(Response::new(data))
 }
 
 async fn get_price_by_item_id(Json(request): Json<Request>) -> Json<Response<PriceInfo>> {
-    let target = Target::from(request.target.as_str());
-    let db = get_db_helper(target).lock().unwrap();
+    let db = get_db_helper(request.target).lock().unwrap();
     let data = db.find_price_by_item_id(request.item_id);
     Json(Response::new(data))
 }
@@ -88,7 +86,8 @@ fn get_dbconnection_container() -> &'static HashMap<Target, Mutex<DbHelper>> {
     unsafe { &*DB_CONNECTION_CONTAINER.as_ptr() }
 }
 
-fn get_db_helper(target: Target) -> &'static Mutex<DbHelper> {
+fn get_db_helper(target: String) -> &'static Mutex<DbHelper> {
+    let target = Target::from(target.as_str());
     let container = get_dbconnection_container();
     container.get(&target).unwrap()
 }
