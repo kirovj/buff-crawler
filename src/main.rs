@@ -63,7 +63,7 @@ impl<T: Serialize> Response<T> {
 
 // index.html
 async fn index() -> Html<&'static str> {
-    Html(get_index_html())
+    Html(utils::HTML)
 }
 
 async fn get_items_by_name(Json(request): Json<Request>) -> Json<Response<Item>> {
@@ -76,10 +76,6 @@ async fn get_price_by_item_id(Json(request): Json<Request>) -> Json<Response<Pri
     let db = get_db_helper(request.target).lock().unwrap();
     let data = db.find_price_by_item_id(request.item_id);
     Json(Response::new(data))
-}
-
-fn get_index_html() -> &'static str {
-    include_str!("../index.html")
 }
 
 fn get_dbconnection_container() -> &'static HashMap<Target, Mutex<DbHelper>> {
