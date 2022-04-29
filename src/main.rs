@@ -7,7 +7,9 @@ mod utils;
 use crate::{crawl::Target, db::DbHelper};
 use axum::{
     extract::Json,
-    routing::{get, post},
+    http::StatusCode,
+    response::Html,
+    routing::{get, get_service, post},
     Router,
 };
 use item::{Item, PriceInfo};
@@ -18,6 +20,7 @@ use std::{
     mem::MaybeUninit,
     sync::{Mutex, Once},
 };
+use tower_http::services::ServeDir;
 
 #[derive(Deserialize)]
 struct Request {
@@ -58,6 +61,11 @@ impl<T: Serialize> Response<T> {
     }
 }
 
+// index.html
+async fn index() -> Html<&'static str> {
+    Html(get_index_html())
+}
+
 async fn get_items_by_name(Json(request): Json<Request>) -> Json<Response<Item>> {
     let db = get_db_helper(request.target).lock().unwrap();
     let data = db.find_items_by_name(request.name);
@@ -68,6 +76,10 @@ async fn get_price_by_item_id(Json(request): Json<Request>) -> Json<Response<Pri
     let db = get_db_helper(request.target).lock().unwrap();
     let data = db.find_price_by_item_id(request.item_id);
     Json(Response::new(data))
+}
+
+fn get_index_html() -> &'static str {
+    include_str!("../index.html")
 }
 
 fn get_dbconnection_container() -> &'static HashMap<Target, Mutex<DbHelper>> {
@@ -99,9 +111,19 @@ async fn main() {
 
     // build our application with a single route
     let app = Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
+        .route("/", get(|| async { "hello world" }))
+        .route("/index", get(index))
         .route("/find_item", post(get_items_by_name))
-        .route("/find_price", post(get_price_by_item_id));
+        .route("/find_price", post(get_price_by_item_id))
+        .nest(
+            "/static",
+            get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Unhandled internal error: {}", error),
+                )
+            }),
+        );
 
     println!("server start");
     // run it with hyper on localhost:3000
