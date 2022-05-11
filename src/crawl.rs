@@ -70,6 +70,10 @@ pub struct YyypCrawler {
 }
 
 impl BuffCrawler {
+    pub fn new(db_helper: DbHelper) -> Self {
+        Self { db_helper }
+    }
+
     fn build_url() -> String {
         let mut url = String::from(utils::API_BUFF);
         url.push_str(utils::current_timestamp().as_str());
@@ -138,6 +142,10 @@ impl Crawl for BuffCrawler {
 }
 
 impl YyypCrawler {
+    pub fn new(db_helper: DbHelper) -> Self {
+        Self { db_helper }
+    }
+
     fn get_item_types(&self) -> Result<Vec<String>, Box<dyn Error>> {
         let mut item_types = Vec::new();
         let html = http::get(utils::API_YYYP_WEAPON)?;

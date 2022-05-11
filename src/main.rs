@@ -4,7 +4,10 @@ mod http;
 mod item;
 mod utils;
 
-use crate::{crawl::Target, db::DbHelper};
+use crate::{
+    crawl::{BuffCrawler, Crawl, Target, YyypCrawler},
+    db::DbHelper,
+};
 use axum::{
     extract::Json,
     http::StatusCode,
@@ -12,6 +15,7 @@ use axum::{
     routing::{get, get_service, post},
     Router,
 };
+use chrono::{Local, Timelike};
 use item::{Item, PriceInfo};
 use rusqlite::Error;
 use serde::{Deserialize, Serialize};
@@ -67,13 +71,13 @@ async fn index() -> Html<&'static str> {
 }
 
 async fn get_items_by_name(Json(request): Json<Request>) -> Json<Response<Item>> {
-    let db = get_db_helper(request.target).lock().unwrap();
+    let db = get_db_helper_by_string(request.target).lock().unwrap();
     let data = db.find_items_by_name(request.name);
     Json(Response::new(data))
 }
 
 async fn get_price_by_item_id(Json(request): Json<Request>) -> Json<Response<PriceInfo>> {
-    let db = get_db_helper(request.target).lock().unwrap();
+    let db = get_db_helper_by_string(request.target).lock().unwrap();
     let data = db.find_price_by_item_id(request.item_id);
     Json(Response::new(data))
 }
@@ -94,16 +98,33 @@ fn get_dbconnection_container() -> &'static HashMap<Target, Mutex<DbHelper>> {
     unsafe { &*DB_CONNECTION_CONTAINER.as_ptr() }
 }
 
-fn get_db_helper(target: String) -> &'static Mutex<DbHelper> {
-    let target = Target::from(target.as_str());
+fn get_db_helper_by_string(target: String) -> &'static Mutex<DbHelper> {
+    get_db_helper(Target::from(target.as_str()))
+}
+
+fn get_db_helper(target: Target) -> &'static Mutex<DbHelper> {
     let container = get_dbconnection_container();
     container.get(&target).unwrap()
 }
 
 #[tokio::main]
 async fn main() {
-    // let db_buff = get_dbconnection(Target::Yyyp);
-    // let _ = tokio::spawn(crawl(Target::Buff, "./data/buff.db"));
+    let _ = tokio::spawn(async {
+        let db_helper = DbHelper::new(utils::DB_FILE_BUFF);
+        let crawler = BuffCrawler::new(db_helper);
+        crawler.run();
+    });
+
+    let _ = tokio::spawn(async {
+        loop {
+            if Local::now().hour() == 23 {
+                let db_helper = DbHelper::new(utils::DB_FILE_YYYP);
+                let crawler = YyypCrawler::new(db_helper);
+                crawler.run();
+            }
+            std::thread::sleep(std::time::Duration::from_secs(600));
+        }
+    });
 
     // build our application with a single route
     let app = Router::new()
