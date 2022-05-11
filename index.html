@@ -12,7 +12,7 @@
 </head>
 
 <body>
-    <div id="main" style="width: 600px;height:400px;"></div>
+    <div id="main" style="width: 1000px; height: 800px;"></div>
 
     <script type="text/javascript">
         // 基于准备好的dom，初始化echarts实例
@@ -38,7 +38,7 @@
             var date_list = []
             var price_list = []
             result['data'].forEach(data => {
-                date_list.push(data['date']);
+                date_list.push(data['date'].slice(2).replaceAll('-', '/'));
                 price_list.push(data['price']);
             });
 
