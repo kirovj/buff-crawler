@@ -4,19 +4,88 @@
 <head>
     <meta charset="utf-8" />
     <script src="static/echarts.js"></script>
-    <style>
-        #main {
-            margin: auto;
-        }
-    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"
+        integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+        integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
+        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+        crossorigin="anonymous"></script>
 </head>
 
 <body>
-    <div id="main" style="width: 1000px; height: 800px;"></div>
+    <br>
+    <div id="chart" style="margin:auto; width: 1300px; height: 800px;"></div>
+    <div id="search" style="width:100%;text-align:center">
+        <form class="form-inline">
+            <div class="form-group">
+                <label for="searchName">Name</label>
+                <input type="text" class="form-control" id="searchName" placeholder="蝴蝶刀">
+            </div>
+            <div class="form-group">
+                <label for="searchTarget">Target</label>
+                <input type="text" class="form-control" id="searchTarget" placeholder="buff">
+            </div>
+            <button type="button" class="btn btn-primary" id="searchButton">search</button>
+        </form>
+    </div>
+
+    <br>
+    <div style="margin:auto; width: 1300px;">
+        <table id="table" class="table table-striped">
+            <thead>
+                <tr>
+                    <td>Name</td>
+                    <td>Class</td>
+                    <td>Ware</td>
+                    <td>Quarty</td>
+                    <td>Rarity</td>
+                    <td>Stat_trak</td>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script type="text/javascript">
+        $("#searchButton").click(function () {
+            var name = $("#searchName").val();
+            var target = $("#searchTarget").val();
+            window.fetch("/find_item", {
+                method: 'post',
+                body: JSON.stringify({
+                    'target': target == '' ? $("#searchTarget").attr('placeholder') : target,
+                    'name': name == '' ? $("#searchName").attr('placeholder') : name,
+                    'item_id': 0
+                }),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+            }).then(result => {
+                var tb = document.getElementById("table");
+                result['data'].forEach(data => {
+                    var row = tb.insertRow(tb.FetchRowCount);
+                    row.insertCell(0).innerHTML = data['name'];
+                    row.insertCell(1).innerHTML = data['class'];
+                    row.insertCell(2).innerHTML = data['ware'];
+                    row.insertCell(3).innerHTML = data['quality'];
+                    row.insertCell(4).innerHTML = data['rarity'];
+                    row.insertCell(5).innerHTML = data['stat_trak'];
+                });
+            }).catch(error => {
+                console.log(error);
+            });
+        });
+    </script>
 
     <script type="text/javascript">
         // 基于准备好的dom，初始化echarts实例
-        var chart = echarts.init(document.getElementById('main'));
+        var chart = echarts.init(document.getElementById('chart'));
 
         window.fetch("/find_price", {
             method: 'post',

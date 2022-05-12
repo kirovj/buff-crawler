@@ -111,8 +111,8 @@ fn get_db_helper(target: Target) -> &'static Mutex<DbHelper> {
 async fn main() {
     let _ = tokio::spawn(async {
         let db_helper = DbHelper::new(utils::DB_FILE_BUFF);
-        let crawler = BuffCrawler::new(db_helper);
-        crawler.run();
+        let _ = BuffCrawler::new(db_helper);
+        // crawler.run();
     });
 
     let _ = tokio::spawn(async {
