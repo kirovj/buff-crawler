@@ -128,8 +128,7 @@ async fn main() {
 
     // build our application with a single route
     let app = Router::new()
-        .route("/", get(|| async { "hello world" }))
-        .route("/index", get(index))
+        .route("/", get(index))
         .route("/find_item", post(get_items_by_name))
         .route("/find_price", post(get_price_by_item_id))
         .nest(
@@ -142,7 +141,6 @@ async fn main() {
             }),
         );
 
-    println!("server start");
     // run it with hyper on localhost:3000
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
         .serve(app.into_make_service())
