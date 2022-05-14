@@ -48,6 +48,22 @@
     </div>
 
     <script type="text/javascript">
+        function getWareColor(ware) {
+            switch (ware) {
+                case "崭新出厂":
+                    return "success";
+                case "略有磨损":
+                    return "info";
+                case "久经沙场":
+                    return "primary";
+                case "战痕累累":
+                    return "warning";
+                case "破损不堪":
+                    return "danger";
+                default:
+                    return "default";
+            }
+        }
         $("#searchButton").click(function () {
             var name = $("#searchName").val();
             var target = $("#searchTarget").val();
@@ -73,10 +89,11 @@
                     var row = tb.insertRow(tb.FetchRowCount);
                     row.insertCell(0).innerHTML = data['name'];
                     row.insertCell(1).innerHTML = data['class'];
-                    row.insertCell(2).innerHTML = data['ware'];
+                    var ware = '<span class="label label-'.concat(getWareColor(data['ware']), '">', data['ware'], '</span>');
+                    row.insertCell(2).innerHTML = ware;
                     row.insertCell(3).innerHTML = data['quality'];
                     row.insertCell(4).innerHTML = data['rarity'];
-                    row.insertCell(5).innerHTML = data['stat_trak'];
+                    row.insertCell(5).innerHTML = data['stat_trak'] ? '<span class="label label-success">stat_trak</span>' : '';
                 });
             }).catch(error => {
                 console.log(error);
