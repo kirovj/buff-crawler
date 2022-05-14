@@ -32,12 +32,13 @@
     </div>
 
     <br>
-    <div style="margin:auto; width: 1300px;">
+    <div style="margin:auto; width: 1100px;">
         <table id="table" class="table table-striped">
             <tbody>
                 <tr>
                     <td>Name</td>
                     <td>Class</td>
+                    <td>Typo</td>
                     <td>Ware</td>
                     <td>Quarty</td>
                     <td>Rarity</td>
@@ -87,13 +88,15 @@
                 $('#table tr:not(:first)').html('');
                 result['data'].forEach(data => {
                     var row = tb.insertRow(tb.FetchRowCount);
-                    row.insertCell(0).innerHTML = data['name'];
+                    var nameLink = '<a href="#" role="button" id="item_' + data['id'] + '">' + data['name'] + '</a>';
+                    row.insertCell(0).innerHTML = nameLink;
                     row.insertCell(1).innerHTML = data['class'];
+                    row.insertCell(2).innerHTML = data['typo'];
                     var ware = '<span class="label label-'.concat(getWareColor(data['ware']), '">', data['ware'], '</span>');
-                    row.insertCell(2).innerHTML = ware;
-                    row.insertCell(3).innerHTML = data['quality'];
-                    row.insertCell(4).innerHTML = data['rarity'];
-                    row.insertCell(5).innerHTML = data['stat_trak'] ? '<span class="label label-success">stat_trak</span>' : '';
+                    row.insertCell(3).innerHTML = ware;
+                    row.insertCell(4).innerHTML = data['quality'];
+                    row.insertCell(5).innerHTML = data['rarity'];
+                    row.insertCell(6).innerHTML = data['stat_trak'] ? '<span class="label label-success">stat_trak</span>' : '';
                 });
             }).catch(error => {
                 console.log(error);
