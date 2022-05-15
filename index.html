@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="CSGO ITEM PRICE" />
+
+    <title>CSGO ITEM PRICE</title>
+    <link rel="icon" href="static/favicon.ico">
+    <link rel="stylesheet" href="static/bootstrap.min.css">
+    <script src="static/echarts.min.js"></script>
+    <script src="static/jquery-3.6.0.slim.min.js"></script>
+    <script src="static/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <br>
+    <div id="chart" style="margin:auto; width: 1300px; height: 800px;"></div>
+    <div id="search" style="width:100%;text-align:center">
+        <form class="form-inline">
+            <div class="form-group">
+                <label for="searchName">Name</label>
+                <input type="text" class="form-control" id="searchName" placeholder="蝴蝶刀">
+            </div>
+            <div class="form-group">
+                <label for="searchTarget">Target</label>
+                <input type="text" class="form-control" id="searchTarget" placeholder="buff">
+            </div>
+            <button type="button" class="btn btn-primary" id="searchButton">search</button>
+        </form>
+    </div>
+
+    <br>
+    <div style="margin:auto; width: 1100px;">
+        <table id="table" class="table table-striped">
+            <tbody>
+                <tr>
+                    <td>Name</td>
+                    <td>Class</td>
+                    <td>Typo</td>
+                    <td>Ware</td>
+                    <td>Quarty</td>
+                    <td>Rarity</td>
+                    <td>Stat_trak</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script type="text/javascript">
+        function getWareColor(ware) {
+            switch (ware) {
+                case "崭新出厂":
+                    return "success";
+                case "略有磨损":
+                    return "info";
+                case "久经沙场":
+                    return "primary";
+                case "战痕累累":
+                    return "warning";
+                case "破损不堪":
+                    return "danger";
+                default:
+                    return "default";
+            }
+        }
+
+        function fetchAndProcess(type, func, target, name, id = 0) {
+            window.fetch("/find_" + type, {
+                method: 'post',
+                body: JSON.stringify({
+                    'target': target,
+                    'name': name,
+                    'item_id': id
+                }),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+            }).then(
+                result => {
+                    func(result);
+                }
+            ).catch(error => {
+                console.log(error);
+                alert(error);
+            });
+        }
+    </script>
+
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var chart = echarts.init(document.getElementById('chart'));
+
+        var minValue = 0
+        var maxValue = 0
+        var precision = 1 //精度
+
+        // 计算间隔，返回y轴最大值，y轴最小值 ，间隔
+        var getLeftData = (min, max) => {
+            // 控制分隔条数，
+            let diff = Math.ceil((max - min) / 3)
+            let minDiff = Math.max(min - diff, 0);
+            return {
+                max: max + diff,
+                min: minDiff,
+                // 分割成 10 等份 
+                interval: Math.ceil((max + diff - (minDiff)) / 10),
+            };
+        }
+
+        let initChart = (result) => {
+            let date_list = []
+            let price_list = []
+            result['data'].forEach(data => {
+                date_list.push(data['date'].slice(2).replaceAll('-', '/'));
+                price_list.push(data['price']);
+            });
+            // 计算数据最大值和最小值
+            maxValue = Math.ceil(Math.max.apply(null, price_list) / 10) * 10;
+            minValue = Math.floor(Math.min.apply(null, price_list) / 10) * 10;
+            let interObj = getLeftData(minValue, maxValue)
+            let option = {
+                animationDuration: 500,
+                tooltip: {},
+                legend: {
+                    data: ['蝴蝶刀（★）']
+                },
+                xAxis: {
+                    data: date_list
+                },
+                yAxis: {
+                    // 设置y轴间隔
+                    interval: interObj.interval,
+                    // 设置y轴最大值
+                    min: interObj.min,
+                    // 设置y轴最小值
+                    max: interObj.max,
+                    axisLabel: {
+                        interval: 'auto',
+                        formatter: function (value, index) {
+                            return value;
+                        }
+                    },
+                },
+                series: [
+                    {
+                        name: '蝴蝶刀（★）',
+                        type: 'line',
+                        smooth: true,
+                        data: price_list
+                    }
+                ]
+            };
+            chart.setOption(option);
+        }
+
+        var addToChart = (item_target_id) => {
+            let params = item_target_id.split('_');
+            let target = params[1];
+            let name = params[2];
+            let id = Number(params[3]);
+
+            let func = (result) => {
+                let date_list = []
+                let price_list = []
+                result['data'].forEach(data => {
+                    date_list.push(data['date'].slice(2).replaceAll('-', '/'));
+                    price_list.push(data['price']);
+                });
+                let newMaxValue = Math.ceil(Math.max.apply(null, price_list) / 10) * 10;
+                let newMinValue = Math.floor(Math.min.apply(null, price_list) / 10) * 10;
+                maxValue = Math.max(maxValue, newMaxValue);
+                minValue = Math.min(minValue, newMinValue);
+                let interObj = getLeftData(minValue, maxValue)
+                let option = chart.getOption();
+                option.legend[0].data.push(name);
+                option.xAxis[0].data = option.xAxis[0].data.length > date_list.length ? option.xAxis[0].data : date_list;
+                option.yAxis[0].interval = interObj.interval;
+                option.yAxis[0].max = interObj.max;
+                option.yAxis[0].min = interObj.min;
+                option.series.push({
+                    name: name,
+                    type: 'line',
+                    smooth: true,
+                    data: price_list
+                });
+                chart.setOption(option);
+            }
+            fetchAndProcess('price', func, target, name, id);
+        }
+
+        fetchAndProcess('price', initChart, 'buff', '', 1220);
+    </script>
+
+    <script type="text/javascript">
+        // search botton
+        $("#searchButton").click(function () {
+            let name = $("#searchName").val() == '' ? $("#searchName").attr('placeholder') : $("#searchName").val();
+            let target = $("#searchTarget").val() == '' ? $("#searchTarget").attr('placeholder') : $("#searchTarget").val();
+            let func = (result) => {
+                let tb = document.getElementById("table");
+                $('#table tr:not(:first)').html('');
+                result['data'].forEach(data => {
+                    let row = tb.insertRow(tb.FetchRowCount);
+                    let nameLink = '<a href="javascript:void(0);" onclick="addToChart(this.id)" role="button" id="item_' + target + '_' + data['name'] + '_' + data['id'] + '">' + data['name'] + '</a>';
+                    row.insertCell(0).innerHTML = nameLink;
+                    row.insertCell(1).innerHTML = data['class'];
+                    row.insertCell(2).innerHTML = data['typo'];
+                    let ware = '<span class="label label-'.concat(getWareColor(data['ware']), '">', data['ware'], '</span>');
+                    row.insertCell(3).innerHTML = ware;
+                    row.insertCell(4).innerHTML = data['quality'];
+                    row.insertCell(5).innerHTML = data['rarity'];
+                    row.insertCell(6).innerHTML = data['stat_trak'] ? '<span class="label label-success">stat_trak</span>' : '';
+                });
+            };
+            fetchAndProcess('item', func, target, name);
+        });
+    </script>
+</body>
+
+</html>

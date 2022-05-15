@@ -16,6 +16,7 @@ pub const API_YYYP_PAGE: &str =
     "https://api.youpin898.com/api/homepage/es/template/GetCsGoPagedList";
 pub const DB_FILE_BUFF: &str = "./data/buff.db";
 pub const DB_FILE_YYYP: &str = "./data/yyyp.db";
+pub const HTML: &str = include_str!("../index.html");
 
 pub fn alert(message: &str) -> () {
     let mut url = fs::read_to_string("alert.txt").unwrap();
