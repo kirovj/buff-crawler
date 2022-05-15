@@ -117,7 +117,7 @@ async fn main() {
 
     let _ = tokio::spawn(async {
         loop {
-            if Local::now().hour() == 23 {
+            if Local::now().hour() == 22 {
                 let db_helper = DbHelper::new(utils::DB_FILE_YYYP);
                 let crawler = YyypCrawler::new(db_helper);
                 crawler.run();

@@ -65,15 +65,14 @@
                     return "default";
             }
         }
-        $("#searchButton").click(function () {
-            var name = $("#searchName").val();
-            var target = $("#searchTarget").val();
-            window.fetch("/find_item", {
+
+        function fetchAndProcess(type, func, target, name, id = 0) {
+            window.fetch("/find_" + type, {
                 method: 'post',
                 body: JSON.stringify({
-                    'target': target == '' ? $("#searchTarget").attr('placeholder') : target,
-                    'name': name == '' ? $("#searchName").attr('placeholder') : name,
-                    'item_id': 0
+                    'target': target,
+                    'name': name,
+                    'item_id': id
                 }),
                 headers: {
                     'Accept': 'application/json',
@@ -83,81 +82,54 @@
                 if (response.ok) {
                     return response.json();
                 }
-            }).then(result => {
-                var tb = document.getElementById("table");
-                $('#table tr:not(:first)').html('');
-                result['data'].forEach(data => {
-                    var row = tb.insertRow(tb.FetchRowCount);
-                    var nameLink = '<a href="#" role="button" id="item_' + data['id'] + '">' + data['name'] + '</a>';
-                    row.insertCell(0).innerHTML = nameLink;
-                    row.insertCell(1).innerHTML = data['class'];
-                    row.insertCell(2).innerHTML = data['typo'];
-                    var ware = '<span class="label label-'.concat(getWareColor(data['ware']), '">', data['ware'], '</span>');
-                    row.insertCell(3).innerHTML = ware;
-                    row.insertCell(4).innerHTML = data['quality'];
-                    row.insertCell(5).innerHTML = data['rarity'];
-                    row.insertCell(6).innerHTML = data['stat_trak'] ? '<span class="label label-success">stat_trak</span>' : '';
-                });
-            }).catch(error => {
+            }).then(
+                result => {
+                    func(result);
+                }
+            ).catch(error => {
                 console.log(error);
+                alert(error);
             });
-        });
+        }
     </script>
 
     <script type="text/javascript">
         // 基于准备好的dom，初始化echarts实例
         var chart = echarts.init(document.getElementById('chart'));
 
-        window.fetch("/find_price", {
-            method: 'post',
-            body: JSON.stringify({
-                'target': 'buff',
-                'name': '蝴蝶刀',
-                'item_id': 1220
-            }),
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        }).then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-        }).then(result => {
-            console.log(result);
-            var date_list = []
-            var price_list = []
+        var minValue = 0
+        var maxValue = 0
+        var precision = 1 //精度
+
+        // 计算间隔，返回y轴最大值，y轴最小值 ，间隔
+        var getLeftData = (min, max) => {
+            // 控制分隔条数，
+            let diff = Math.ceil((max - min) / 3)
+            let minDiff = Math.max(min - diff, 0);
+            return {
+                max: max + diff,
+                min: minDiff,
+                // 分割成 10 等份 
+                interval: Math.ceil((max + diff - (minDiff)) / 10),
+            };
+        }
+
+        let initChart = (result) => {
+            let date_list = []
+            let price_list = []
             result['data'].forEach(data => {
                 date_list.push(data['date'].slice(2).replaceAll('-', '/'));
                 price_list.push(data['price']);
             });
-
             // 计算数据最大值和最小值
-            let minValue = 0
-            let maxValue = 0
-            let precision = 1 //精度
             maxValue = Math.ceil(Math.max.apply(null, price_list) / 10) * 10;
             minValue = Math.floor(Math.min.apply(null, price_list) / 10) * 10;
-            // 计算间隔，返回y轴最大值，y轴最小值 ，间隔
-            let getLeftData = (min, max) => {
-                // 控制分隔条数，
-                let diff = Math.ceil((max - min) / 3)
-                return {
-                    max: max + diff,
-                    min: min - diff,
-                    // 分割成 10 等份 
-                    interval: Math.ceil((max + diff - (min - diff)) / 10),
-                };
-            }
             let interObj = getLeftData(minValue, maxValue)
-            var option = {
+            let option = {
                 animationDuration: 500,
-                title: {
-                    text: 'CSGO ITEM PRICE'
-                },
                 tooltip: {},
                 legend: {
-                    data: ['price']
+                    data: ['蝴蝶刀（★）']
                 },
                 xAxis: {
                     data: date_list
@@ -178,7 +150,7 @@
                 },
                 series: [
                     {
-                        name: 'price',
+                        name: '蝴蝶刀（★）',
                         type: 'line',
                         smooth: true,
                         data: price_list
@@ -186,8 +158,68 @@
                 ]
             };
             chart.setOption(option);
-        }).catch(error => {
-            console.log(error);
+        }
+
+        var addToChart = (item_target_id) => {
+            let params = item_target_id.split('_');
+            let target = params[1];
+            let name = params[2];
+            let id = Number(params[3]);
+
+            let func = (result) => {
+                let date_list = []
+                let price_list = []
+                result['data'].forEach(data => {
+                    date_list.push(data['date'].slice(2).replaceAll('-', '/'));
+                    price_list.push(data['price']);
+                });
+                let newMaxValue = Math.ceil(Math.max.apply(null, price_list) / 10) * 10;
+                let newMinValue = Math.floor(Math.min.apply(null, price_list) / 10) * 10;
+                maxValue = Math.max(maxValue, newMaxValue);
+                minValue = Math.min(minValue, newMinValue);
+                let interObj = getLeftData(minValue, maxValue)
+                let option = chart.getOption();
+                option.legend[0].data.push(name);
+                option.xAxis[0].data = option.xAxis[0].data.length > date_list.length ? option.xAxis[0].data : date_list;
+                option.yAxis[0].interval = interObj.interval;
+                option.yAxis[0].max = interObj.max;
+                option.yAxis[0].min = interObj.min;
+                option.series.push({
+                    name: name,
+                    type: 'line',
+                    smooth: true,
+                    data: price_list
+                });
+                chart.setOption(option);
+            }
+            fetchAndProcess('price', func, target, name, id);
+        }
+
+        fetchAndProcess('price', initChart, 'buff', '', 1220);
+    </script>
+
+    <script type="text/javascript">
+        // search botton
+        $("#searchButton").click(function () {
+            let name = $("#searchName").val() == '' ? $("#searchName").attr('placeholder') : $("#searchName").val();
+            let target = $("#searchTarget").val() == '' ? $("#searchTarget").attr('placeholder') : $("#searchTarget").val();
+            let func = (result) => {
+                let tb = document.getElementById("table");
+                $('#table tr:not(:first)').html('');
+                result['data'].forEach(data => {
+                    let row = tb.insertRow(tb.FetchRowCount);
+                    let nameLink = '<a href="javascript:void(0);" onclick="addToChart(this.id)" role="button" id="item_' + target + '_' + data['name'] + '_' + data['id'] + '">' + data['name'] + '</a>';
+                    row.insertCell(0).innerHTML = nameLink;
+                    row.insertCell(1).innerHTML = data['class'];
+                    row.insertCell(2).innerHTML = data['typo'];
+                    let ware = '<span class="label label-'.concat(getWareColor(data['ware']), '">', data['ware'], '</span>');
+                    row.insertCell(3).innerHTML = ware;
+                    row.insertCell(4).innerHTML = data['quality'];
+                    row.insertCell(5).innerHTML = data['rarity'];
+                    row.insertCell(6).innerHTML = data['stat_trak'] ? '<span class="label label-success">stat_trak</span>' : '';
+                });
+            };
+            fetchAndProcess('item', func, target, name);
         });
     </script>
 </body>
