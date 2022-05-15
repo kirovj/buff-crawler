@@ -100,17 +100,20 @@
         var minValue = 0
         var maxValue = 0
         var precision = 1 //精度
+        var yCount = 0
 
         // 计算间隔，返回y轴最大值，y轴最小值 ，间隔
         var getLeftData = (min, max) => {
-            // 控制分隔条数，
-            let diff = Math.ceil((max - min) / 3)
-            let minDiff = Math.max(min - diff, 0);
+            // 控制分隔条数
+            max = Math.ceil(max / 1000) * 1000;
+            min = Math.floor(min / 1000) * 1000;
+            let diff = max - min;
+            yCount = diff / 200;
             return {
-                max: max + diff,
-                min: minDiff,
+                max: max,
+                min: min,
                 // 分割成 10 等份 
-                interval: Math.ceil((max + diff - (minDiff)) / 10),
+                interval: Math.ceil(diff / yCount),
             };
         }
 
@@ -191,6 +194,8 @@
                     data: price_list
                 });
                 chart.setOption(option);
+                chart.getDom().style.height = Math.min(yCount * 30, 1000) + 'px';
+                chart.resize();
             }
             fetchAndProcess('price', func, target, name, id);
         }
