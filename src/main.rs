@@ -111,13 +111,13 @@ fn get_db_helper(target: Target) -> &'static Mutex<DbHelper> {
 async fn main() {
     let _ = tokio::spawn(async {
         let db_helper = DbHelper::new(utils::DB_FILE_BUFF);
-        let _ = BuffCrawler::new(db_helper);
-        // crawler.run();
+        let crawler = BuffCrawler::new(db_helper);
+        crawler.run();
     });
 
     let _ = tokio::spawn(async {
         loop {
-            if Local::now().hour() == 22 {
+            if Local::now().hour() == 23 {
                 let db_helper = DbHelper::new(utils::DB_FILE_YYYP);
                 let crawler = YyypCrawler::new(db_helper);
                 crawler.run();
