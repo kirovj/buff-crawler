@@ -16,7 +16,7 @@
 
 <body>
     <br>
-    <div id="chart" style="margin:auto; width: 1300px; height: 800px;"></div>
+    <div id="chart" style="margin:auto; width: 1300px; height: 820px;"></div>
     <div id="search" style="width:100%;text-align:center">
         <form class="form-inline">
             <div class="form-group">
@@ -100,7 +100,6 @@
         var minValue = 0
         var maxValue = 0
         var precision = 1 //精度
-        var yCount = 0
 
         // 计算间隔，返回y轴最大值，y轴最小值 ，间隔
         var getLeftData = (min, max) => {
@@ -108,12 +107,11 @@
             max = Math.ceil(max / 1000) * 1000;
             min = Math.floor(min / 1000) * 1000;
             let diff = max - min;
-            yCount = diff / 200;
             return {
                 max: max,
                 min: min,
                 // 分割成 10 等份 
-                interval: Math.ceil(diff / yCount),
+                interval: Math.ceil(diff / 10),
             };
         }
 
@@ -196,8 +194,6 @@
                     data: price_list
                 });
                 chart.setOption(option);
-                chart.getDom().style.height = Math.min(yCount * 30, 1000) + 'px';
-                chart.resize();
             }
             fetchAndProcess('price', func, target, name, id);
         }
