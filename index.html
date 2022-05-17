@@ -132,7 +132,7 @@
                 animationDuration: 500,
                 tooltip: {},
                 legend: {
-                    data: ['蝴蝶刀（★）']
+                    data: ['BUFF | 蝴蝶刀（★）']
                 },
                 xAxis: {
                     data: date_list
@@ -153,7 +153,7 @@
                 },
                 series: [
                     {
-                        name: '蝴蝶刀（★）',
+                        name: 'BUFF | 蝴蝶刀（★）',
                         type: 'line',
                         smooth: true,
                         data: price_list
@@ -167,9 +167,11 @@
             let params = item_target_id.split('_');
             let target = params[1];
             let name = params[2];
-            let id = Number(params[3]);
+            let ware = params[3]
+            let id = Number(params[4]);
 
             let func = (result) => {
+                let seriesName = target.toUpperCase() + ' | ' + name + ' | ' + ware;
                 let date_list = []
                 let price_list = []
                 result['data'].forEach(data => {
@@ -182,13 +184,13 @@
                 minValue = Math.min(minValue, newMinValue);
                 let interObj = getLeftData(minValue, maxValue)
                 let option = chart.getOption();
-                option.legend[0].data.push(name);
+                option.legend[0].data.push(seriesName);
                 option.xAxis[0].data = option.xAxis[0].data.length > date_list.length ? option.xAxis[0].data : date_list;
                 option.yAxis[0].interval = interObj.interval;
                 option.yAxis[0].max = interObj.max;
                 option.yAxis[0].min = interObj.min;
                 option.series.push({
-                    name: name,
+                    name: seriesName,
                     type: 'line',
                     smooth: true,
                     data: price_list
@@ -213,7 +215,7 @@
                 $('#table tr:not(:first)').html('');
                 result['data'].forEach(data => {
                     let row = tb.insertRow(tb.FetchRowCount);
-                    let nameLink = '<a href="javascript:void(0);" onclick="addToChart(this.id)" role="button" id="item_' + target + '_' + data['name'] + '_' + data['id'] + '">' + data['name'] + '</a>';
+                    let nameLink = '<a href="javascript:void(0);" onclick="addToChart(this.id)" role="button" id="item_' + target + '_' + data['name'] + '_' + data['ware'] + '_' + data['id'] + '">' + data['name'] + '</a>';
                     row.insertCell(0).innerHTML = nameLink;
                     row.insertCell(1).innerHTML = data['class'];
                     row.insertCell(2).innerHTML = data['typo'];
