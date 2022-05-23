@@ -117,6 +117,12 @@ impl BuffCrawler {
         }
         true
     }
+
+    fn sleep(&self) {
+        thread::sleep(time::Duration::from_secs(
+            rand::thread_rng().gen_range(180..240),
+        ));
+    }
 }
 
 impl Crawl for BuffCrawler {

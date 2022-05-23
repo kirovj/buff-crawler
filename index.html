@@ -16,7 +16,7 @@
 
 <body>
     <br>
-    <div id="chart" style="margin:auto; width: 1300px; height: 800px;"></div>
+    <div id="chart" style="margin:auto; width: 1300px; height: 820px;"></div>
     <div id="search" style="width:100%;text-align:center">
         <form class="form-inline">
             <div class="form-group">
@@ -103,14 +103,15 @@
 
         // 计算间隔，返回y轴最大值，y轴最小值 ，间隔
         var getLeftData = (min, max) => {
-            // 控制分隔条数，
-            let diff = Math.ceil((max - min) / 3)
-            let minDiff = Math.max(min - diff, 0);
+            // 控制分隔条数
+            max = Math.ceil(max / 1000) * 1000;
+            min = Math.floor(min / 1000) * 1000;
+            let diff = max - min;
             return {
-                max: max + diff,
-                min: minDiff,
+                max: max,
+                min: min,
                 // 分割成 10 等份 
-                interval: Math.ceil((max + diff - (minDiff)) / 10),
+                interval: Math.ceil(diff / 10),
             };
         }
 
@@ -129,7 +130,7 @@
                 animationDuration: 500,
                 tooltip: {},
                 legend: {
-                    data: ['蝴蝶刀（★）']
+                    data: ['BUFF | 蝴蝶刀（★）']
                 },
                 xAxis: {
                     data: date_list
@@ -150,7 +151,7 @@
                 },
                 series: [
                     {
-                        name: '蝴蝶刀（★）',
+                        name: 'BUFF | 蝴蝶刀（★）',
                         type: 'line',
                         smooth: true,
                         data: price_list
@@ -164,9 +165,11 @@
             let params = item_target_id.split('_');
             let target = params[1];
             let name = params[2];
-            let id = Number(params[3]);
+            let ware = params[3]
+            let id = Number(params[4]);
 
             let func = (result) => {
+                let seriesName = target.toUpperCase() + ' | ' + name + ' | ' + ware;
                 let date_list = []
                 let price_list = []
                 result['data'].forEach(data => {
@@ -179,13 +182,13 @@
                 minValue = Math.min(minValue, newMinValue);
                 let interObj = getLeftData(minValue, maxValue)
                 let option = chart.getOption();
-                option.legend[0].data.push(name);
+                option.legend[0].data.push(seriesName);
                 option.xAxis[0].data = option.xAxis[0].data.length > date_list.length ? option.xAxis[0].data : date_list;
                 option.yAxis[0].interval = interObj.interval;
                 option.yAxis[0].max = interObj.max;
                 option.yAxis[0].min = interObj.min;
                 option.series.push({
-                    name: name,
+                    name: seriesName,
                     type: 'line',
                     smooth: true,
                     data: price_list
@@ -208,7 +211,7 @@
                 $('#table tr:not(:first)').html('');
                 result['data'].forEach(data => {
                     let row = tb.insertRow(tb.FetchRowCount);
-                    let nameLink = '<a href="javascript:void(0);" onclick="addToChart(this.id)" role="button" id="item_' + target + '_' + data['name'] + '_' + data['id'] + '">' + data['name'] + '</a>';
+                    let nameLink = '<a href="javascript:void(0);" onclick="addToChart(this.id)" role="button" id="item_' + target + '_' + data['name'] + '_' + data['ware'] + '_' + data['id'] + '">' + data['name'] + '</a>';
                     row.insertCell(0).innerHTML = nameLink;
                     row.insertCell(1).innerHTML = data['class'];
                     row.insertCell(2).innerHTML = data['typo'];
