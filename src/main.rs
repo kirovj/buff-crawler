@@ -9,7 +9,7 @@ use crate::{
     db::DbHelper,
 };
 use axum::{
-    extract::Json,
+    extract::{Json, Query},
     http::StatusCode,
     response::Html,
     routing::{get, get_service, post},
@@ -49,6 +49,14 @@ impl<T: Serialize> Response<T> {
         }
     }
 
+    fn ok_without_data() -> Self {
+        Response {
+            status: 0,
+            message: String::from("ok"),
+            data: None,
+        }
+    }
+
     fn fail(message: String) -> Self {
         Response {
             status: 1,
@@ -80,6 +88,29 @@ async fn get_price_by_item_id(Json(request): Json<Request>) -> Json<Response<Pri
     let db = get_db_helper_by_string(request.target).lock().unwrap();
     let data = db.find_price_by_item_id(request.item_id);
     Json(Response::new(data))
+}
+
+#[derive(Deserialize)]
+struct ItemPrice {
+    target: String,
+    name: String,
+    class: String,
+    typo: String,
+    ware: String,
+    quality: String,
+    rarity: String,
+    stat_trak: u32,
+    date: String,
+    price: f32,
+}
+
+async fn insert_item_price(Query(req): Query<ItemPrice>) -> Json<Response<u32>> {
+    let db = get_db_helper_by_string(req.target).lock().unwrap();
+    let item = Item::new(req.name, req.class, req.typo, req.ware, req.quality, req.rarity, req.stat_trak == 1);
+    db.get_item_id(&item).map(|id| {
+        db.add_price_info(&PriceInfo::new(id, req.date, req.price));
+    });
+    Json(Response::ok_without_data())
 }
 
 fn get_dbconnection_container() -> &'static HashMap<Target, Mutex<DbHelper>> {
@@ -131,6 +162,7 @@ async fn main() {
         .route("/", get(index))
         .route("/find_item", post(get_items_by_name))
         .route("/find_price", post(get_price_by_item_id))
+        .route("/add_price", get(insert_item_price))
         .nest(
             "/static",
             get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
