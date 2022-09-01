@@ -96,8 +96,8 @@
         // 计算间隔，返回y轴最大值，y轴最小值 ，间隔
         let getLeftData = (min, max) => {
             // 控制分隔条数
-            max = Math.ceil(max / 1000) * 1000;
-            min = Math.floor(min / 1000) * 1000;
+            max = Math.ceil(max / 100) * 100;
+            min = Math.floor(min / 100) * 100;
             let diff = max - min;
             return {
                 max: max,
@@ -171,7 +171,7 @@
                 return;
             }
             $("#row_" + id).after("<tr id=\"echart_tr_" + id + "\"><td colspan=\"7\"><div id=\"echart_" + id + "\"></div></td></tr>");
-            $("#echart_" + id).attr("style", "width: 1100px; height: 700px;");
+            $("#echart_" + id).attr("style", "width: 1100px; height: 400px;");
             // 基于准备好的dom，初始化echarts实例
             let chart = echarts.init(document.getElementById("echart_" + id));
             window.fetch("/find_price", {
