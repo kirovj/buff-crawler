@@ -162,7 +162,7 @@ async fn main() {
         .route("/", get(index))
         .route("/find_item", post(get_items_by_name))
         .route("/find_price", post(get_price_by_item_id))
-        .route("/add_price", get(insert_item_price))
+        // .route("/add_price", get(insert_item_price))
         .nest(
             "/static",
             get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {
