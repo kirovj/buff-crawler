@@ -33,17 +33,18 @@
     <br>
     <div style="margin:auto; width: 1100px;">
         <table id="table" class="table table-striped">
-            <tbody>
+            <thead>
                 <tr>
-                    <td>Name</td>
-                    <td>Class</td>
-                    <td>Typo</td>
-                    <td>Ware</td>
-                    <td>Quarty</td>
-                    <td>Rarity</td>
-                    <td>Stat_trak</td>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Typo</th>
+                    <th>Ware</th>
+                    <th>Quarty</th>
+                    <th>Rarity</th>
+                    <th>Stat_trak</th>
                 </tr>
-            </tbody>
+            </thead>
+            <tbody></tbody>
         </table>
     </div>
 
@@ -201,26 +202,63 @@
     </script>
 
     <script type="text/javascript">
+
+        let ware_value = ware => {
+            switch (ware) {
+                case "崭新出厂":
+                    return 5;
+                case "略有磨损":
+                    return 4;
+                case "久经沙场":
+                    return 3;
+                case "战痕累累":
+                    return 2;
+                case "破损不堪":
+                    return 1;
+                default:
+                    return 6;
+            }
+        }
+
+        // sort function
+        let compare = (a, b) => {
+            let name_compare = a["name"].localeCompare(b["name"], 'zh');
+            return name_compare == 0 ? -(ware_value(a["ware"]) - ware_value(b["ware"])) : name_compare;
+        }
+
         // search botton
         $("#searchButton").click(function () {
+            $('#table').find("tbody").find("tr").remove();
             let name = $("#searchName").val() == '' ? $("#searchName").attr('placeholder') : $("#searchName").val();
             let target = $("#searchTarget").val() == '' ? $("#searchTarget").attr('placeholder') : $("#searchTarget").val();
+            let tb = document.getElementById("table").getElementsByTagName('tbody')[0];
+            let push_to_table = data => {
+                let row = tb.insertRow();
+                row.setAttribute("id", "row_" + data["id"]); 
+                let nameLink = '<a href="javascript:void(0);" onclick="process(this.id)" role="button" id="item_' + target + '_' + data['name'] + '_' + data['ware'] + '_' + data['id'] + '">' + data['name'] + '</a>';
+                row.insertCell(0).innerHTML = nameLink;
+                row.insertCell(1).innerHTML = data['class'];
+                row.insertCell(2).innerHTML = data['typo'];
+                let ware = '<span class="label label-'.concat(getWareColor(data['ware']), '">', data['ware'], '</span>');
+                row.insertCell(3).innerHTML = ware;
+                row.insertCell(4).innerHTML = data['quality'];
+                row.insertCell(5).innerHTML = data['rarity'];
+                row.insertCell(6).innerHTML = data['stat_trak'] ? '<span class="label label-success">stat_trak</span>' : '';
+            };
             let func = (result) => {
-                let tb = document.getElementById("table");
-                $('#table tr:not(:first)').html('');
+                let datas = [];
+                let datas_stat = [];
                 result['data'].forEach(data => {
-                    let row = tb.insertRow(tb.FetchRowCount);
-                    row.setAttribute("id", "row_" + data["id"]); 
-                    let nameLink = '<a href="javascript:void(0);" onclick="process(this.id)" role="button" id="item_' + target + '_' + data['name'] + '_' + data['ware'] + '_' + data['id'] + '">' + data['name'] + '</a>';
-                    row.insertCell(0).innerHTML = nameLink;
-                    row.insertCell(1).innerHTML = data['class'];
-                    row.insertCell(2).innerHTML = data['typo'];
-                    let ware = '<span class="label label-'.concat(getWareColor(data['ware']), '">', data['ware'], '</span>');
-                    row.insertCell(3).innerHTML = ware;
-                    row.insertCell(4).innerHTML = data['quality'];
-                    row.insertCell(5).innerHTML = data['rarity'];
-                    row.insertCell(6).innerHTML = data['stat_trak'] ? '<span class="label label-success">stat_trak</span>' : '';
+                    if (data['stat_trak']) {
+                        datas_stat.push(data);
+                    } else {
+                        datas.push(data);
+                    }
                 });
+                datas.sort(compare);
+                datas_stat.sort(compare);
+                datas.forEach(push_to_table);
+                datas_stat.forEach(push_to_table);
             };
             fetchAndProcess('item', func, target, name);
         });
