@@ -33,17 +33,18 @@
     <br>
     <div style="margin:auto; width: 1100px;">
         <table id="table" class="table table-striped">
-            <tbody>
+            <thead>
                 <tr>
-                    <td>Name</td>
-                    <td>Class</td>
-                    <td>Typo</td>
-                    <td>Ware</td>
-                    <td>Quarty</td>
-                    <td>Rarity</td>
-                    <td>Stat_trak</td>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Typo</th>
+                    <th>Ware</th>
+                    <th>Quarty</th>
+                    <th>Rarity</th>
+                    <th>Stat_trak</th>
                 </tr>
-            </tbody>
+            </thead>
+            <tbody></tbody>
         </table>
     </div>
 
@@ -227,11 +228,12 @@
 
         // search botton
         $("#searchButton").click(function () {
+            $('#table').find("tbody").find("tr").remove();
             let name = $("#searchName").val() == '' ? $("#searchName").attr('placeholder') : $("#searchName").val();
             let target = $("#searchTarget").val() == '' ? $("#searchTarget").attr('placeholder') : $("#searchTarget").val();
-            let tb = document.getElementById("table");
+            let tb = document.getElementById("table").getElementsByTagName('tbody')[0];
             let push_to_table = data => {
-                let row = tb.insertRow(tb.FetchRowCount);
+                let row = tb.insertRow();
                 row.setAttribute("id", "row_" + data["id"]); 
                 let nameLink = '<a href="javascript:void(0);" onclick="process(this.id)" role="button" id="item_' + target + '_' + data['name'] + '_' + data['ware'] + '_' + data['id'] + '">' + data['name'] + '</a>';
                 row.insertCell(0).innerHTML = nameLink;
@@ -244,7 +246,6 @@
                 row.insertCell(6).innerHTML = data['stat_trak'] ? '<span class="label label-success">stat_trak</span>' : '';
             };
             let func = (result) => {
-                $('#table').find("tr").remove();
                 let datas = [];
                 let datas_stat = [];
                 result['data'].forEach(data => {
