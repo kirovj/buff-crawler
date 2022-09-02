@@ -207,7 +207,7 @@
             let target = $("#searchTarget").val() == '' ? $("#searchTarget").attr('placeholder') : $("#searchTarget").val();
             let func = (result) => {
                 let tb = document.getElementById("table");
-                $('#table tr:not(:first)').html('');
+                $('#table').find("tr").remove();
                 result['data'].forEach(data => {
                     let row = tb.insertRow(tb.FetchRowCount);
                     row.setAttribute("id", "row_" + data["id"]); 
