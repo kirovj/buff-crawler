@@ -1,6 +1,5 @@
 /target
 *.txt
-*.json
 *.db
 *.exe
 .idea

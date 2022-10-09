@@ -41,3 +41,51 @@ pub fn get(url: &str) -> Result<String, ureq::Error> {
 pub fn post_json(url: &str, data: &HashMap<&str, &str>) -> Result<String, ureq::Error> {
     request(url, Method::PostJson, Some(data))
 }
+
+#[derive(Deserialize)]
+struct Request {
+    target: String,
+    name: String,
+    item_id: u32,
+}
+
+#[derive(Serialize)]
+struct Response<T> {
+    status: u8,
+    message: String,
+    data: Option<Vec<T>>,
+}
+
+impl<T: Serialize> Response<T> {
+    fn ok(data: Vec<T>) -> Self {
+        Response {
+            status: 0,
+            message: String::from("ok"),
+            data: Some(data),
+        }
+    }
+
+    fn ok_without_data() -> Self {
+        Response {
+            status: 0,
+            message: String::from("ok"),
+            data: None,
+        }
+    }
+
+    fn fail(message: String) -> Self {
+        Response {
+            status: 1,
+            message,
+            data: None,
+        }
+    }
+
+    fn new(result: Result<Vec<T>, Error>) -> Self {
+        match result {
+            Ok(data) => Self::ok(data),
+            Err(e) => Self::fail(e.to_string()),
+        }
+    }
+}
+

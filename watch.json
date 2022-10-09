@@ -1,0 +1,10 @@
+[
+    {
+        "target":"buff",
+        "name": "蝴蝶刀（★）",
+        "class": "匕首",
+        "typo":"蝴蝶刀",
+        "ware":"无涂装",
+        "stat_trak": false
+    }
+]
