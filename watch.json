@@ -1,0 +1,74 @@
+[
+    {
+        "target": "buff",
+        "name": "蝴蝶刀（★）",
+        "class": "匕首",
+        "typo": "蝴蝶刀",
+        "ware": "无涂装",
+        "stat_trak": false
+    },
+    {
+        "target": "buff",
+        "name": "蝴蝶刀（★） | 外表生锈",
+        "class": "匕首",
+        "typo": "蝴蝶刀",
+        "ware": "战痕累累",
+        "stat_trak": false
+    },
+    {
+        "target": "buff",
+        "name": "爪子刀（★） | 自动化",
+        "class": "匕首",
+        "typo": "爪子刀",
+        "ware": "久经沙场",
+        "stat_trak": false
+    },
+    {
+        "target": "buff",
+        "name": "爪子刀（★） | 黑色层压板",
+        "class": "匕首",
+        "typo": "爪子刀",
+        "ware": "战痕累累",
+        "stat_trak": false
+    },
+    {
+        "target": "buff",
+        "name": "流浪者匕首（★）",
+        "class": "匕首",
+        "typo": "流浪者匕首",
+        "ware": "无涂装",
+        "stat_trak": false
+    },
+    {
+        "target": "buff",
+        "name": "AK-47 | 火神",
+        "class": "步枪",
+        "typo": "AK-47",
+        "ware": "崭新出厂",
+        "stat_trak": false
+    },
+    {
+        "target": "buff",
+        "name": "专业手套（★） | 陆军少尉长官",
+        "class": "手套",
+        "typo": "专业手套",
+        "ware": "略有磨损",
+        "stat_trak": false
+    },
+    {
+        "target": "buff",
+        "name": "折叠刀（★） | 伽玛多普勒",
+        "class": "匕首",
+        "typo": "折叠刀",
+        "ware": "崭新出厂",
+        "stat_trak": false
+    },
+    {
+        "target": "buff",
+        "name": "裹手（★） | 皮革",
+        "class": "手套",
+        "typo": "手部束带",
+        "ware": "久经沙场",
+        "stat_trak": false
+    }
+]

@@ -1,17 +1,9 @@
-# csgo-item-price
+# rscsgo
 csgo item daily price info crawler and server.
 use pure rust to build crawler, server and front.
 
 # Usage
-    csgo-crawler.exe [FLAGS] [OPTIONS] --target <target>
-
-    FLAGS:
-        -h, --help       Prints help information
-        -V, --version    Prints version information
-
-    OPTIONS:
-        -d, --database <db>      database file name
-        -t, --target <target>    crawl target: buff | yyyp | igxe
+    cargo run --release
 
 # LICENSE
     GPL-2.0

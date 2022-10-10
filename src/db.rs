@@ -71,6 +71,39 @@ impl DbHelper {
         )
     }
 
+    pub fn find_item(
+        &self,
+        name: String,
+        class: String,
+        typo: String,
+        ware: String,
+        stat_trak: bool,
+    ) -> Result<Item> {
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT * from Item \
+            where name = ?1 \
+            and class = ?2 \
+            and typo = ?3 \
+            and ware = ?4 \
+            and stat_trak = ?5",
+            )
+            .unwrap();
+        stmt.query_row(params![name, class, typo, ware, stat_trak], |row| {
+            Ok(Item {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                class: row.get(2)?,
+                typo: row.get(3)?,
+                ware: row.get(4)?,
+                quality: row.get(5)?,
+                rarity: row.get(6)?,
+                stat_trak: row.get(7)?,
+            })
+        })
+    }
+
     pub fn get_item_id(&self, item: &Item) -> Option<u32> {
         match self.find_item_id(item) {
             Ok(id) => Some(id),

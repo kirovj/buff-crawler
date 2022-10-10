@@ -1,3 +1,5 @@
+use rusqlite::Error;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Duration};
 
 use crate::utils::UA;
@@ -40,4 +42,39 @@ pub fn get(url: &str) -> Result<String, ureq::Error> {
 
 pub fn post_json(url: &str, data: &HashMap<&str, &str>) -> Result<String, ureq::Error> {
     request(url, Method::PostJson, Some(data))
+}
+
+#[derive(Deserialize)]
+pub struct Request {
+    pub target: String,
+    pub name: String,
+    pub item_id: u32,
+}
+
+#[derive(Serialize)]
+pub struct Response<T> {
+    status: u8,
+    message: String,
+    data: Option<Vec<T>>,
+}
+
+impl<T: Serialize> Response<T> {
+    pub fn ok(data: Vec<T>) -> Self {
+        Response {
+            status: 0,
+            message: String::from("ok"),
+            data: Some(data),
+        }
+    }
+
+    pub fn new(result: Result<Vec<T>, Error>) -> Self {
+        match result {
+            Ok(data) => Self::ok(data),
+            Err(e) => Response {
+                status: 1,
+                message: e.to_string(),
+                data: None,
+            },
+        }
+    }
 }
