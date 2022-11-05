@@ -24,6 +24,7 @@ use std::{
     sync::{Mutex, Once},
 };
 use tower_http::services::ServeDir;
+use utils::alert;
 
 fn get_dbconnection_container() -> &'static HashMap<Target, Mutex<DbHelper>> {
     // 使用 MaybeUninit 延迟初始化
@@ -71,7 +72,7 @@ fn get_watch_list() -> &'static Vec<Item> {
                         let ware = value["ware"].as_str().unwrap().to_string();
                         let stat_trak = value["stat_trak"].as_bool().unwrap();
                         let db = get_db_helper_by_string(target).lock().unwrap();
-                        let item = db.find_item(name, class, typo, ware, stat_trak);
+                        let item = db.find_item_by_fields(name, class, typo, ware, stat_trak);
                         item.ok()
                     })
                     .collect();
@@ -122,6 +123,25 @@ async fn main() {
                 crawler.run();
             }
             std::thread::sleep(std::time::Duration::from_secs(600));
+        }
+    });
+
+    let _ = tokio::spawn(async {
+        loop {
+            if Local::now().hour() > 9 {
+                let message = get_watch_list()
+                    .iter()
+                    .map(|item| {
+                        let db = get_db_helper(Target::Buff).lock().unwrap();
+                        let item = db.find_item(item.to_owned()).unwrap();
+                        let price = db.find_lastest_price_by_item_id(item.id).unwrap_or(-1.0);
+                        item.to_msg(price)
+                    })
+                    .collect::<Vec<String>>()
+                    .join("      \n");
+                alert(message.as_str());
+            }
+            std::thread::sleep(std::time::Duration::from_secs(3600));
         }
     });
 

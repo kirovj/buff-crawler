@@ -1,8 +1,4 @@
-use std::fs;
-
 use chrono::Local;
-
-use crate::http;
 
 // constants
 pub const UA: &str = 
@@ -17,11 +13,10 @@ pub const API_YYYP_PAGE: &str =
 pub const DB_FILE_BUFF: &str = "./data/buff.db";
 pub const DB_FILE_YYYP: &str = "./data/yyyp.db";
 pub const HTML: &str = include_str!("../index.html");
+pub const ALERT: &str = include_str!("../alert.txt");
 
 pub fn alert(message: &str) -> () {
-    let mut url = fs::read_to_string("alert.txt").unwrap();
-    url.push_str(message);
-    let _ = http::get(url.as_str());
+    ureq::post(ALERT).send_form(&[("data", message)]).unwrap();
 }
 
 // Retain one decimal place
