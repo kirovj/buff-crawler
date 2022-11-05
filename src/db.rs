@@ -71,7 +71,17 @@ impl DbHelper {
         )
     }
 
-    pub fn find_item(
+    pub fn find_item(&self, item: Item) -> Result<Item> {
+        return self.find_item_by_fields(
+            item.name,
+            item.class,
+            item.typo,
+            item.ware,
+            item.stat_trak,
+        );
+    }
+
+    pub fn find_item_by_fields(
         &self,
         name: String,
         class: String,
@@ -203,6 +213,13 @@ impl DbHelper {
             }
         }
         Ok(price_infos)
+    }
+
+    pub fn find_lastest_price_by_item_id(&self, item_id: u32) -> Result<f32> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT price from PriceInfo where item_id = ?1 order by id desc limit 1")?;
+        stmt.query_row(params![item_id], |row| row.get(0))
     }
 }
 

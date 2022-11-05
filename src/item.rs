@@ -62,6 +62,11 @@ impl Item {
             stat_trak,
         }
     }
+
+    pub fn to_msg(&self, price: f32) -> String {
+        let name = String::from(self.name.as_str()).replace("（★）", "");
+        format!("{}: {}: {}", name, self.ware, price)
+    }
 }
 
 #[derive(Serialize, Debug)]

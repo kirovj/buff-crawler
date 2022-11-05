@@ -29,7 +29,12 @@ pub trait Crawl {
     fn name(&self) -> &str;
 
     fn alert(&self, message: &str) {
-        let message = format!("[{}] {}: {}", utils::current_time(), self.name(), message);
+        let message = format!(
+            "[{}]      \n{}: {}",
+            utils::current_time(),
+            self.name(),
+            message
+        );
         println!("{}", message);
         utils::alert(message.as_str());
     }
