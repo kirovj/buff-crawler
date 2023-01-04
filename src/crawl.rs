@@ -202,16 +202,8 @@ impl YyypCrawler {
     fn parse(&self, html: String) -> bool {
         let result_value: Result<Value, JsonError> = serde_json::from_str(html.as_str());
         match result_value {
-            Ok(value) => match value["TotalCount"].as_u64() {
-                None => {
-                    self.alert("get total count failed");
-                    false
-                }
-                Some(0) => {
-                    println!("all pages processed");
-                    false
-                }
-                Some(_) => match value["Data"].as_array() {
+            Ok(value) => match value["Code"].as_u64() {
+                Some(0) => match value["Data"].as_array() {
                     Some(datas) => {
                         let _ = datas
                             .into_iter()
@@ -236,10 +228,15 @@ impl YyypCrawler {
                         true
                     }
                     _ => {
-                        self.alert("get datas failed");
+                        println!("all pages processed");
                         false
                     }
                 },
+                _ => {
+                    let msg = format!("http request fail, message: {:?}", value["Msg"].as_str());
+                    self.alert(msg.as_str());
+                    false
+                }
             },
             _ => {
                 self.alert("read whole json failed");
