@@ -5,7 +5,7 @@ mod item;
 mod utils;
 
 use crate::{
-    crawl::{BuffCrawler, Crawl, Target},
+    crawl::{BuffCrawler, Crawl, Target, YyypCrawler},
     db::DbHelper,
 };
 use axum::{
@@ -112,19 +112,14 @@ async fn main() {
     let _ = tokio::spawn(async {
         let db_helper = DbHelper::new(utils::DB_FILE_BUFF);
         let crawler = BuffCrawler::new(db_helper);
-        crawler.run();
+        crawler.run(BuffCrawler::build_url().as_str());
     });
 
-    // let _ = tokio::spawn(async {
-    //     loop {
-    //         if Local::now().hour() == 23 {
-    //             let db_helper = DbHelper::new(utils::DB_FILE_YYYP);
-    //             let crawler = YyypCrawler::new(db_helper);
-    //             crawler.run();
-    //         }
-    //         std::thread::sleep(std::time::Duration::from_secs(600));
-    //     }
-    // });
+    let _ = tokio::spawn(async {
+        let db_helper = DbHelper::new(utils::DB_FILE_YYYP);
+        let crawler = YyypCrawler::new(db_helper);
+        crawler.run(utils::API_YYYP);
+    });
 
     let _ = tokio::spawn(async {
         loop {
