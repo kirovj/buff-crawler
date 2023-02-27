@@ -128,7 +128,7 @@ async fn main() {
 
     let _ = tokio::spawn(async {
         loop {
-            if Local::now().hour() > 23 {
+            if Local::now().hour() == 22 {
                 let message = get_watch_list()
                     .iter()
                     .map(|item| {
