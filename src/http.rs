@@ -4,6 +4,7 @@ use std::{collections::HashMap, time::Duration};
 
 use crate::utils::UA;
 
+#[allow(unused)]
 enum Method {
     Get,
     PostJson,
@@ -40,6 +41,7 @@ pub fn get(url: &str) -> Result<String, ureq::Error> {
     request(url, Method::Get, None)
 }
 
+#[allow(unused)]
 pub fn post_json(url: &str, data: &HashMap<&str, &str>) -> Result<String, ureq::Error> {
     request(url, Method::PostJson, Some(data))
 }
