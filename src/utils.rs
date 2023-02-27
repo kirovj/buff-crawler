@@ -6,10 +6,7 @@ pub const UA: &str =
 pub const DEFAULT: &str = "无";
 pub const API_BUFF: &str = 
     "https://buff.163.com/api/market/goods?game=csgo&page_num=1&page_size=120&use_suggestion=0&trigger=undefined_trigger&_=";
-pub const API_YYYP_WEAPON: &str =
-    "https://api.youpin898.com/api/v2/commodity/Tag/GetCsGoWeaponList";
-pub const API_YYYP_PAGE: &str =
-    "https://api.youpin898.com/api/homepage/es/template/GetCsGoPagedList";
+pub const API_YYYP: &str = "https://api.youpin898.com/api/v2/commodity/template/GetCsGoNewOnShelf?Count=50";
 pub const DB_FILE_BUFF: &str = "./data/buff.db";
 pub const DB_FILE_YYYP: &str = "./data/yyyp.db";
 pub const HTML: &str = include_str!("../index.html");
