@@ -37,6 +37,15 @@ pub trait Crawl {
         utils::alert(message.as_str());
     }
 
+    fn success(&self) {
+        let message = format!(
+            "[{}] {}: get json items success",
+            utils::current_time(),
+            self.name(),
+        );
+        println!("{}", message);
+    }
+
     fn db(&self) -> &DbHelper;
 
     fn parse(&self, html: String) -> bool;
@@ -118,7 +127,7 @@ impl Crawl for BuffCrawler {
                 let data = &value["data"];
                 match data["items"].as_array() {
                     Some(data_items) => {
-                        println!("[{}] get json items success", utils::current_time());
+                        self.success();
                         for data_item in data_items {
                             let info = &data_item["goods_info"]["info"]["tags"];
                             let item = Item::new(
@@ -177,6 +186,7 @@ impl Crawl for YyypCrawler {
             Ok(value) => match value["Code"].as_u64() {
                 Some(0) => match value["Data"].as_array() {
                     Some(datas) => {
+                        self.success();
                         let _ = datas
                             .into_iter()
                             .map(|data| match data["TypeName"].as_str() {
