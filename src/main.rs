@@ -107,6 +107,25 @@ async fn find_price_by_item_id(
     Json(http::Response::new(data))
 }
 
+async fn receive_data(Json(request): Json<http::DataRequest>) -> Json<http::DataRequest> {
+    let crawler: Box<dyn Crawl> = match request.target.as_str() {
+        "buff" => Box::new(BuffCrawler::new(DbHelper::new(utils::DB_FILE_BUFF))),
+        "yyyp" => Box::new(YyypCrawler::new(DbHelper::new(utils::DB_FILE_YYYP))),
+        _ => {
+            return Json(http::DataRequest {
+                target: request.target,
+                data: "receive data failed, target is not support".to_string(),
+            });
+        }
+    };
+    crawler.parse(request.data);
+    crawler.alert("receive data from api success");
+    Json(http::DataRequest {
+        target: request.target,
+        data: "receive data success".to_string(),
+    })
+}
+
 #[tokio::main]
 async fn main() {
     let _ = tokio::spawn(async {
@@ -146,6 +165,7 @@ async fn main() {
         .route("/find_watch_list", get(find_watch_list))
         .route("/find_item", post(find_items_by_name))
         .route("/find_price", post(find_price_by_item_id))
+        .route("/receive_data", post(receive_data))
         .nest(
             "/static",
             get_service(ServeDir::new("static")).handle_error(|error: std::io::Error| async move {

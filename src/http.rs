@@ -80,3 +80,9 @@ impl<T: Serialize> Response<T> {
         }
     }
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct DataRequest {
+    pub target: String,
+    pub data: String,
+}
