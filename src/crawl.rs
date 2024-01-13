@@ -26,6 +26,10 @@ impl From<&str> for Target {
 pub trait Crawl {
     fn name(&self) -> &str;
 
+    fn send_message(&self) -> bool {
+        true
+    }
+
     fn alert(&self, message: &str) {
         let message = format!(
             "[{}]      \n{}: {}",
@@ -34,7 +38,9 @@ pub trait Crawl {
             message
         );
         println!("{}", message);
-        utils::alert(message.as_str());
+        if self.send_message() {
+            utils::alert(message.as_str());
+        }
     }
 
     fn success(&self) {
@@ -112,6 +118,10 @@ impl Crawl for BuffCrawler {
 
     fn db(&self) -> &DbHelper {
         &self.db_helper
+    }
+
+    fn send_message(&self) -> bool {
+        false
     }
 
     fn parse(&self, html: String) -> bool {
